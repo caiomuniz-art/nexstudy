@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+
+import { useApplyPageQuery } from "@/lib/client-query";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
@@ -56,11 +58,21 @@ export function TasksView({
 }) {
   const router = useRouter();
   const now = useMemo(() => new Date(nowIso), [nowIso]);
-  const editingFromUrl = tasks.find((task) => task.id === editId) ?? null;
+  const [urlEditId, setUrlEditId] = useState(editId);
+  const [datePreset, setDatePreset] = useState(presetDate);
+  const editingFromUrl = tasks.find((task) => task.id === urlEditId) ?? null;
   const [query, setQuery] = useState<TaskQuery>(EMPTY_TASK_QUERY);
   const [page, setPage] = useState(1);
   const [view, setView] = useState<TaskView>(initialView);
   const [dialog, setDialog] = useState<TaskRow | "new" | null>(editingFromUrl ?? (nova ? "new" : null));
+  useApplyPageQuery((pageQuery) => {
+    if (pageQuery.presetDate) setDatePreset(pageQuery.presetDate);
+    if (pageQuery.editId) {
+      setUrlEditId(pageQuery.editId);
+      const found = tasks.find((task) => task.id === pageQuery.editId) ?? null;
+      if (found) setDialog(found);
+    } else if (pageQuery.nova) setDialog("new");
+  });
   const [removing, setRemoving] = useState<TaskRow | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -99,7 +111,7 @@ export function TasksView({
         actions={<Button type="button" onClick={() => { setDialog("new"); setError(""); }}>Nova tarefa</Button>}
       />
       {dbMessage ? <Alert tone="error">{dbMessage}</Alert> : null}
-      {editId && !editingFromUrl ? <Alert tone="error">Não encontramos esta tarefa.</Alert> : null}
+      {urlEditId && !editingFromUrl ? <Alert tone="error">Não encontramos esta tarefa.</Alert> : null}
       {message ? <Alert tone="success">{message}</Alert> : null}
       {error ? <Alert tone="error">{error}</Alert> : null}
       {truncated ? <Alert>A lista está limitada a 1000 tarefas mais recentes.</Alert> : null}
@@ -204,7 +216,7 @@ export function TasksView({
             key={dialog === "new" ? "new" : dialog.id}
             task={dialog === "new" ? null : dialog}
             subjects={subjects}
-            presetDate={presetDate}
+            presetDate={datePreset}
             onCancel={() => setDialog(null)}
             onDone={(text) => { setDialog(null); setMessage(text); router.refresh(); }}
           />

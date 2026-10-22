@@ -3,6 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+
+import { useApplyPageQuery } from "@/lib/client-query";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
@@ -34,7 +36,15 @@ export function StudyView({
 }) {
   const router = useRouter();
   const editing = sessions.find((item) => item.id === editId) ?? null;
+  const [datePreset, setDatePreset] = useState(presetDate);
   const [dialog, setDialog] = useState<StudySessionRow | "new" | null>(editing ?? (nova ? "new" : null));
+  useApplyPageQuery((pageQuery) => {
+    if (pageQuery.presetDate) setDatePreset(pageQuery.presetDate);
+    if (pageQuery.editId) {
+      const found = sessions.find((item) => item.id === pageQuery.editId) ?? null;
+      if (found) setDialog(found);
+    } else if (pageQuery.nova) setDialog("new");
+  });
   const [removing, setRemoving] = useState<StudySessionRow | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -83,7 +93,7 @@ export function StudyView({
         {history.length === 0 ? <p className="mt-2 text-sm text-muted">As sessões concluídas aparecem aqui.</p> : <p className="mt-2 text-sm text-muted">{history.length} sessões concluídas na conta.</p>}
       </section>
       <Dialog open={dialog !== null} title={dialog && dialog !== "new" ? "Editar sessão" : "Nova sessão"} onClose={() => setDialog(null)}>
-        {dialog ? <SessionForm key={dialog === "new" ? "new" : dialog.id} item={dialog === "new" ? null : dialog} subjects={subjects} presetDate={presetDate} onCancel={() => setDialog(null)} onDone={(text) => { setMessage(text); setDialog(null); router.refresh(); }} /> : null}
+        {dialog ? <SessionForm key={dialog === "new" ? "new" : dialog.id} item={dialog === "new" ? null : dialog} subjects={subjects} presetDate={datePreset} onCancel={() => setDialog(null)} onDone={(text) => { setMessage(text); setDialog(null); router.refresh(); }} /> : null}
       </Dialog>
       <Dialog open={Boolean(removing)} title="Excluir sessão" description={removing ? `Excluir “${removing.title}”?` : undefined} onClose={() => setRemoving(null)}>
         <div className="flex flex-wrap justify-end gap-2">

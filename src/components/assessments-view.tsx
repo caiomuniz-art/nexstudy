@@ -3,6 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+
+import { useApplyPageQuery } from "@/lib/client-query";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
@@ -33,12 +35,22 @@ export function AssessmentsView({
 }) {
   const router = useRouter();
   const now = useMemo(() => new Date(nowIso), [nowIso]);
-  const editingFromUrl = assessments.find((item) => item.id === editId) ?? null;
+  const [urlEditId, setUrlEditId] = useState(editId);
+  const [datePreset, setDatePreset] = useState(presetDate);
+  const editingFromUrl = assessments.find((item) => item.id === urlEditId) ?? null;
   const [subjectId, setSubjectId] = useState("");
   const [type, setType] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [dialog, setDialog] = useState<AssessmentRow | "new" | null>(editingFromUrl ?? (nova ? "new" : null));
+  useApplyPageQuery((pageQuery) => {
+    if (pageQuery.presetDate) setDatePreset(pageQuery.presetDate);
+    if (pageQuery.editId) {
+      setUrlEditId(pageQuery.editId);
+      const found = assessments.find((item) => item.id === pageQuery.editId) ?? null;
+      if (found) setDialog(found);
+    } else if (pageQuery.nova) setDialog("new");
+  });
   const [removing, setRemoving] = useState<AssessmentRow | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -70,7 +82,7 @@ export function AssessmentsView({
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
       <PageHeader title="Provas e trabalhos" description="Acompanhe data, conteúdo, importância e preparação." actions={<Button type="button" onClick={() => setDialog("new")}>Nova avaliação</Button>} />
       {dbMessage ? <Alert tone="error">{dbMessage}</Alert> : null}
-      {editId && !editingFromUrl ? <Alert tone="error">Não encontramos esta avaliação.</Alert> : null}
+      {urlEditId && !editingFromUrl ? <Alert tone="error">Não encontramos esta avaliação.</Alert> : null}
       {message ? <Alert tone="success">{message}</Alert> : null}
       {error ? <Alert tone="error">{error}</Alert> : null}
 
@@ -135,7 +147,7 @@ export function AssessmentsView({
       )}
 
       <Dialog open={dialog !== null} title={dialog && dialog !== "new" ? "Editar avaliação" : "Nova avaliação"} onClose={() => setDialog(null)}>
-        {dialog ? <AssessmentForm key={dialog === "new" ? "new" : dialog.id} item={dialog === "new" ? null : dialog} subjects={subjects} presetDate={presetDate} onCancel={() => setDialog(null)} onDone={(text) => { setMessage(text); setDialog(null); router.refresh(); }} /> : null}
+        {dialog ? <AssessmentForm key={dialog === "new" ? "new" : dialog.id} item={dialog === "new" ? null : dialog} subjects={subjects} presetDate={datePreset} onCancel={() => setDialog(null)} onDone={(text) => { setMessage(text); setDialog(null); router.refresh(); }} /> : null}
       </Dialog>
       <Dialog open={Boolean(removing)} title="Excluir avaliação" description={removing ? `Excluir “${removing.title}”?` : undefined} onClose={() => setRemoving(null)}>
         <div className="flex flex-wrap justify-end gap-2">

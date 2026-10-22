@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+
+import { useApplyPageQuery } from "@/lib/client-query";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
@@ -20,7 +22,17 @@ import { loginSchema, recoverySchema, signupSchema } from "@/lib/validations";
 export function LoginForm({ nextPath, initialError }: { nextPath?: string; initialError?: string }) {
   const router = useRouter();
   const [error, setError] = useState(initialError ?? "");
+  const [next, setNext] = useState(nextPath);
   const [show, setShow] = useState(false);
+  useApplyPageQuery((pageQuery) => {
+    if (pageQuery.next) setNext(safeNextPath(pageQuery.next));
+    const known: Record<string, string> = {
+      confirmacao: "Não foi possível confirmar o acesso. Solicite um novo link.",
+      configuracao: "Não foi possível concluir o acesso. Tente de novo.",
+    };
+    const message = known[pageQuery.erro];
+    if (message) setError(message);
+  });
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: { username: "", password: "", next: nextPath },
@@ -46,8 +58,8 @@ export function LoginForm({ nextPath, initialError }: { nextPath?: string; initi
       setError(mapAuthError(authError.message));
       return;
     }
-    const next = safeNextPath(nextPath);
-    router.push(nextPath ? `/avisos?next=${encodeURIComponent(next)}` : "/avisos");
+    const destination = safeNextPath(next);
+    router.push(next ? `/avisos?next=${encodeURIComponent(destination)}` : "/avisos");
     router.refresh();
   }
 

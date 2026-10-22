@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+
+import { useApplyPageQuery } from "@/lib/client-query";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
@@ -34,6 +36,12 @@ export function SubjectsView({
   const router = useRouter();
   const editing = subjects.find((item) => item.id === editId) ?? null;
   const [dialog, setDialog] = useState<SubjectRow | "new" | null>(editing ?? (nova ? "new" : null));
+  useApplyPageQuery((pageQuery) => {
+    if (pageQuery.editId) {
+      const found = subjects.find((item) => item.id === pageQuery.editId) ?? null;
+      if (found) setDialog(found);
+    } else if (pageQuery.nova) setDialog("new");
+  });
   const [removing, setRemoving] = useState<SubjectRow | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");

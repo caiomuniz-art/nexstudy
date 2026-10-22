@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+
+import { useApplyPageQuery } from "@/lib/client-query";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
@@ -30,9 +32,22 @@ export function ScheduleView({
   dbMessage: string | null;
 }) {
   const router = useRouter();
-  const editing = schedules.find((item) => item.id === editId) ?? null;
+  const [urlEditId, setUrlEditId] = useState(editId);
+  const [dayPreset, setDayPreset] = useState(presetDay);
+  const editing = schedules.find((item) => item.id === urlEditId) ?? null;
   const [day, setDay] = useState(presetDay);
   const [dialog, setDialog] = useState<ScheduleRow | "new" | null>(editing ?? (nova ? "new" : null));
+  useApplyPageQuery((pageQuery) => {
+    if (pageQuery.presetDay !== null) {
+      setDay(pageQuery.presetDay);
+      setDayPreset(pageQuery.presetDay);
+    }
+    if (pageQuery.editId) {
+      setUrlEditId(pageQuery.editId);
+      const found = schedules.find((item) => item.id === pageQuery.editId) ?? null;
+      if (found) setDialog(found);
+    } else if (pageQuery.nova) setDialog("new");
+  });
   const [removing, setRemoving] = useState<ScheduleRow | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -41,7 +56,7 @@ export function ScheduleView({
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
       <PageHeader title="Grade horária" description="Aulas da semana. Horários que se cruzam no mesmo dia são recusados." actions={<Button type="button" onClick={() => setDialog("new")}>Nova aula</Button>} />
       {dbMessage ? <Alert tone="error">{dbMessage}</Alert> : null}
-      {editId && !editing ? <Alert tone="error">Não encontramos esta aula.</Alert> : null}
+      {urlEditId && !editing ? <Alert tone="error">Não encontramos esta aula.</Alert> : null}
       {message ? <Alert tone="success">{message}</Alert> : null}
       {error ? <Alert tone="error">{error}</Alert> : null}
       {subjects.length === 0 ? <Alert>Cadastre uma matéria antes de montar a grade. <Link href="/materias?nova=1" className="font-medium text-accent">Criar matéria</Link></Alert> : null}
@@ -81,7 +96,7 @@ export function ScheduleView({
             key={dialog === "new" ? "new" : dialog.id}
             item={dialog === "new" ? null : dialog}
             subjects={subjects}
-            presetDay={presetDay}
+            presetDay={dayPreset}
             onCancel={() => setDialog(null)}
             onDone={(text) => { setMessage(text); setError(""); setDialog(null); router.refresh(); }}
             onError={setError}

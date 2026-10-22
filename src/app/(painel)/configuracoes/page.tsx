@@ -1,17 +1,11 @@
 import { redirect } from "next/navigation";
 
 import { SettingsView } from "@/components/settings-view";
-import { oneParam } from "@/lib/labels";
 import { loadWorkspace } from "@/server/data";
 
 export const metadata = { title: "Configurações" };
 
-export default async function ConfiguracoesPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const params = await searchParams;
+export default async function ConfiguracoesPage() {
   const workspace = await loadWorkspace();
   if (workspace.status === "anonymous") redirect("/login");
   return (
@@ -20,7 +14,7 @@ export default async function ConfiguracoesPage({
       theme={workspace.shell.theme}
       tasksView={workspace.shell.tasksView}
       density={workspace.shell.density}
-      recovery={oneParam(params.recuperacao) === "1"}
+      recovery={false}
       dbMessage={workspace.status === "error" ? workspace.message : null}
     />
   );

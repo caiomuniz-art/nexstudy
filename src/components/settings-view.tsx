@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+
+import { useApplyPageQuery } from "@/lib/client-query";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
@@ -33,6 +35,9 @@ export function SettingsView({
   const router = useRouter();
   const [message, setMessage] = useState(recovery ? "Senha pronta para ser redefinida. Escolha uma nova senha abaixo." : "");
   const [error, setError] = useState("");
+  useApplyPageQuery((pageQuery) => {
+    if (pageQuery.recuperacao) setMessage("Senha pronta para ser redefinida. Escolha uma nova senha abaixo.");
+  });
   const preferences = useForm<z.infer<typeof preferencesSchema>>({
     resolver: zodResolver(preferencesSchema),
     defaultValues: { theme, tasks_view: tasksView, density },
@@ -104,7 +109,8 @@ export function SettingsView({
 
       <form className="oe-card oe-pad grid gap-3 border-danger/40" onSubmit={deletion.handleSubmit(async (values) => {
         const result = await deleteOwnAccount(values);
-        if (result && !result.ok) setError(result.error);
+        if (!result.ok) setError(result.error);
+        else router.push("/");
       })} noValidate>
         <h2 className="font-semibold">Excluir conta e dados</h2>
         <p className="text-sm text-muted">Digite EXCLUIR para confirmar. A exclusão roda no servidor, remove a conta e os registros ligados a ela, e encerra a sessão.</p>

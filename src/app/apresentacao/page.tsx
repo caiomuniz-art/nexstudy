@@ -9,15 +9,9 @@ import {
   Shield,
 } from "lucide-react";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { PublicFooter, PublicHeader } from "@/components/public-frame";
-import { oneParam } from "@/lib/labels";
-import { safeNextPath } from "@/lib/paths";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { isVisitorValue, VISITOR_COOKIE } from "@/lib/visitor";
 
 export const metadata: Metadata = {
   title: "Como funciona",
@@ -44,18 +38,7 @@ const questions = [
   ["Não tem uma conta?", "Cadastre-se. A conta fica salva para você entrar depois."],
 ];
 
-export default async function ApresentacaoPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const params = await searchParams;
-  const supabase = await createSupabaseServerClient();
-  const user = supabase ? (await supabase.auth.getUser()).data.user : null;
-  const visitor = isVisitorValue((await cookies()).get(VISITOR_COOKIE)?.value);
-  if (!user && !visitor) redirect("/");
-  const panel = safeNextPath(oneParam(params.next));
-
+export default function ApresentacaoPage() {
   return (
     <>
       <PublicHeader />
@@ -66,7 +49,7 @@ export default async function ApresentacaoPage({
           <p className="mt-5 max-w-xl text-base leading-7 text-muted">
             O painel já pode ser aberto. Abaixo estão as partes do NexStudy e o caminho para organizar a semana.
           </p>
-          <Link href={panel} className="oe-btn mt-8">Abrir o painel</Link>
+          <Link href="/dashboard" className="oe-btn mt-8">Abrir o painel</Link>
         </section>
 
         <section className="mx-auto grid max-w-6xl gap-4 px-4 pb-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -79,6 +79,12 @@ export function AppShell({ shell, children }: { shell: ShellInfo; children: Reac
     localStorage.setItem("oe-theme", theme);
   }, [theme]);
 
+  async function signOut(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await logout();
+    router.push("/");
+  }
+
   async function cycleTheme() {
     const order: Theme[] = ["light", "dark", "system"];
     const next = order[(order.indexOf(theme) + 1) % order.length] ?? "system";
@@ -133,7 +139,7 @@ export function AppShell({ shell, children }: { shell: ShellInfo; children: Reac
           </nav>
           <div className="border-t border-white/10 p-3">
             {shell.configured ? (
-              <form action={logout}>
+              <form onSubmit={signOut}>
                 <button type="submit" className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-sidebar-muted shadow-[inset_3px_0_0_transparent] transition hover:bg-white/8 hover:text-white hover:shadow-[inset_3px_0_0_var(--mark)]">
                   <LogOut className="h-4 w-4" aria-hidden />
                   Sair
@@ -214,7 +220,7 @@ export function AppShell({ shell, children }: { shell: ShellInfo; children: Reac
                   <Link className="block rounded-lg px-3 py-2 hover:bg-accent-soft" href="/perfil">Perfil</Link>
                   <Link className="block rounded-lg px-3 py-2 hover:bg-accent-soft" href="/configuracoes">Configurações</Link>
                   {shell.configured ? (
-                    <form action={logout}>
+                    <form onSubmit={signOut}>
                       <button type="submit" className="w-full rounded-lg px-3 py-2 text-left hover:bg-accent-soft">Sair</button>
                     </form>
                   ) : <Link className="block rounded-lg px-3 py-2 hover:bg-accent-soft" href="/login">Entrar</Link>}

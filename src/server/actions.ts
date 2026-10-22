@@ -1,13 +1,9 @@
-"use server";
-
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import type { ZodError } from "zod";
 
 import { mapDbError } from "@/lib/errors";
 import { findScheduleOverlap } from "@/lib/schedule/overlap";
 import { SUPABASE_MISSING_MESSAGE } from "@/lib/messages";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createBrowserSupabase } from "@/lib/supabase/browser";
 import {
   assessmentFormSchema,
   deleteAccountSchema,
@@ -29,14 +25,14 @@ import {
   toSubjectWrite,
   toTaskWrite,
 } from "@/lib/validations";
-import { PRIVATE_ROUTES, type TaskStatus } from "@/types/domain";
+import type { TaskStatus } from "@/types/domain";
 
 export type ActionResult<T = undefined> =
   | { ok: true; message: string; data?: T }
   | { ok: false; error: string; fieldErrors?: Record<string, string> };
 
 async function requireUser() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createBrowserSupabase();
   if (!supabase) return { ok: false as const, error: SUPABASE_MISSING_MESSAGE };
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) return { ok: false as const, error: "Sua sessão expirou. Entre novamente." };
@@ -44,7 +40,7 @@ async function requireUser() {
 }
 
 function refresh() {
-  for (const route of PRIVATE_ROUTES) revalidatePath(route.href);
+  // A interface atualiza a lista no próprio navegador depois de cada ação.
 }
 
 function invalid(error: ZodError): ActionResult {
@@ -428,13 +424,12 @@ export async function deleteOwnAccount(input: unknown): Promise<ActionResult> {
     return { ok: false, error: message };
   }
   await auth.supabase.auth.signOut();
-  redirect("/");
+  return { ok: true, message: "Conta excluída." };
 }
 
 export async function logout() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createBrowserSupabase();
   if (supabase) await supabase.auth.signOut();
-  redirect("/");
 }
 
 async function deleteOwned(table: "tasks" | "subjects" | "assessments" | "class_schedules" | "study_sessions", id: string, message: string): Promise<ActionResult> {
