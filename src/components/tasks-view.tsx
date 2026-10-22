@@ -9,6 +9,7 @@ import { useApplyPageQuery } from "@/lib/client-query";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
+import { SubjectChoices } from "@/components/subject-choices";
 import { Alert, Badge, Button, Dialog, EmptyState, Field, PageHeader, SelectInput, TextArea, TextInput } from "@/components/ui";
 import { formatDateTimeBr } from "@/lib/dates";
 import { CATEGORY_LABEL, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/labels";
@@ -130,8 +131,7 @@ export function TasksView({
         </Field>
         <Field id="materia" label="Matéria">
           <SelectInput id="materia" value={query.subjectId} onChange={(event) => { setQuery({ ...query, subjectId: event.target.value }); setPage(1); }}>
-            <option value="">Todas</option>
-            {subjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.name}</option>)}
+            <SubjectChoices blank="Todas" />
           </SelectInput>
         </Field>
         <Field id="status" label="Status">
@@ -215,7 +215,6 @@ export function TasksView({
           <TaskForm
             key={dialog === "new" ? "new" : dialog.id}
             task={dialog === "new" ? null : dialog}
-            subjects={subjects}
             presetDate={datePreset}
             onCancel={() => setDialog(null)}
             onDone={(text) => { setDialog(null); setMessage(text); router.refresh(); }}
@@ -240,7 +239,7 @@ export function TasksView({
   );
 }
 
-function TaskForm({ task, subjects, presetDate, onCancel, onDone }: { task: TaskRow | null; subjects: SubjectRow[]; presetDate: string; onCancel: () => void; onDone: (message: string) => void }) {
+function TaskForm({ task, presetDate, onCancel, onDone }: { task: TaskRow | null; presetDate: string; onCancel: () => void; onDone: (message: string) => void }) {
   const form = useForm<z.infer<typeof taskFormSchema>>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -287,8 +286,7 @@ function TaskForm({ task, subjects, presetDate, onCancel, onDone }: { task: Task
       </div>
       <Field id="subject_id" label="Matéria" error={form.formState.errors.subject_id?.message}>
         <SelectInput id="subject_id" {...form.register("subject_id")}>
-          <option value="">Sem matéria</option>
-          {subjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.name}</option>)}
+          <SubjectChoices blank="Sem matéria" />
         </SelectInput>
       </Field>
       <div className="sm:col-span-2">

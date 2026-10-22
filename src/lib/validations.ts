@@ -71,6 +71,7 @@ export const signupSchema = z
     fullName: z.string().trim().min(2, "Informe seu nome.").max(80, "Use no máximo 80 caracteres."),
     password: entrySchema,
     confirmPassword: z.string().min(1, "Repita a entrada."),
+    notificationContact: z.string().max(320, "Use no máximo 320 caracteres.").optional(),
   })
   .superRefine((value, ctx) => {
     if (!loginLocalPart(value.fullName)) {

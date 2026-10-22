@@ -13,6 +13,7 @@ import { findScheduleOverlap, rangesOverlap } from "@/lib/schedule/overlap";
 import { summarizeSubject } from "@/lib/subjects/summary";
 import { filterTasks, taskCounts } from "@/lib/tasks/query";
 import { internalEmail } from "@/lib/identity";
+import { createAccountBook } from "@/lib/local-account";
 import { loginSchema, scheduleFormSchema, signupSchema, taskFormSchema } from "@/lib/validations";
 import type { AssessmentRow, ScheduleRow, StudySessionRow, SubjectRow, TaskRow } from "@/types/domain";
 
@@ -373,6 +374,41 @@ describe("validação, paginação e caminhos", () => {
     expect(internalEmail("Ana Souza")).toBe("ana.souza@conta.nexstudy.app");
     expect(internalEmail("João")).toBe(internalEmail("joao"));
     expect(internalEmail("...")).toBe("");
+  });
+
+  it("guarda a conta e o contato neste navegador e entra de novo com o mesmo nome", async () => {
+    const memory = new Map<string, string>();
+    const store = {
+      getItem: (key: string) => memory.get(key) ?? null,
+      setItem: (key: string, value: string) => { memory.set(key, value); },
+      removeItem: (key: string) => { memory.delete(key); },
+    };
+    const created = await createAccountBook(store).register({
+      name: "Ana Souza",
+      secret: "rota1234",
+      notificationContact: "qualquer texto",
+    });
+    expect(created.ok).toBe(true);
+    const again = createAccountBook(store);
+    expect(again.current()).toMatchObject({ name: "Ana Souza", notificationContact: "qualquer texto" });
+    again.logout();
+    expect(again.current()).toBeNull();
+    const entered = await createAccountBook(store).login({ name: "ana souza", secret: "rota1234" });
+    expect(entered.ok).toBe(true);
+    expect(createAccountBook(store).current()?.notificationContact).toBe("qualquer texto");
+    const wrong = await createAccountBook(store).login({ name: "Ana Souza", secret: "outra" });
+    expect(wrong.ok).toBe(false);
+    expect(signupSchema.safeParse({
+      fullName: "Ana Souza",
+      password: "rota1234",
+      confirmPassword: "rota1234",
+      notificationContact: "nao-e-um-endereco",
+    }).success).toBe(true);
+    expect(signupSchema.safeParse({
+      fullName: "Ana Souza",
+      password: "rota1234",
+      confirmPassword: "rota1234",
+    }).success).toBe(true);
   });
 
   it("aceita login sem impor regra de complexidade", () => {

@@ -25,6 +25,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Logo } from "@/components/logo";
+import { browserAccounts } from "@/lib/local-account";
+import { useLocalAccount } from "@/lib/use-local-account";
 import { logout, markNotificationRead, updatePreferences } from "@/server/actions";
 import type { ShellInfo } from "@/server/data";
 import { PRIVATE_ROUTES, type Theme } from "@/types/domain";
@@ -61,6 +63,7 @@ export function AppShell({ shell, children }: { shell: ShellInfo; children: Reac
   const [themeSource, setThemeSource] = useState(shell.theme);
   const [menuPath, setMenuPath] = useState(pathname);
   const [notice, setNotice] = useState<string | null>(null);
+  const localAccount = useLocalAccount();
 
   if (themeSource !== shell.theme) {
     setThemeSource(shell.theme);
@@ -81,6 +84,7 @@ export function AppShell({ shell, children }: { shell: ShellInfo; children: Reac
 
   async function signOut(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    browserAccounts()?.logout();
     await logout();
     router.push("/");
   }
@@ -101,7 +105,9 @@ export function AppShell({ shell, children }: { shell: ShellInfo; children: Reac
   }
 
   const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
-  const displayName = shell.fullName || (shell.configured ? "Estudante" : "Visitante");
+  const signedIn = shell.configured || Boolean(localAccount);
+  const displayName = shell.fullName || localAccount?.name || (shell.configured ? "Estudante" : "Visitante");
+  const accountLabel = localAccount?.notificationContact || localAccount?.name || shell.email || shell.fullName || "Sem sessão";
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[260px_1fr]" data-density={shell.density}>
@@ -138,7 +144,7 @@ export function AppShell({ shell, children }: { shell: ShellInfo; children: Reac
             })}
           </nav>
           <div className="border-t border-white/10 p-3">
-            {shell.configured ? (
+            {signedIn ? (
               <form onSubmit={signOut}>
                 <button type="submit" className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-sidebar-muted shadow-[inset_3px_0_0_transparent] transition hover:bg-white/8 hover:text-white hover:shadow-[inset_3px_0_0_var(--mark)]">
                   <LogOut className="h-4 w-4" aria-hidden />
@@ -184,7 +190,7 @@ export function AppShell({ shell, children }: { shell: ShellInfo; children: Reac
               </button>
               {notices ? (
                 <div className="oe-card absolute right-0 z-30 mt-2 w-[min(20rem,calc(100vw-1.5rem))] p-3 text-sm">
-                  {!shell.configured ? <p>Entre na sua conta para ver os avisos.</p> : shell.recent.length === 0 ? <p>Nenhum aviso não lido.</p> : (
+                  {!signedIn ? <p>Entre na sua conta para ver os avisos.</p> : shell.recent.length === 0 ? <p>Nenhum aviso não lido.</p> : (
                     <ul className="space-y-2">
                       {shell.recent.map((item) => (
                         <li key={item.id}>
@@ -216,10 +222,10 @@ export function AppShell({ shell, children }: { shell: ShellInfo; children: Reac
               </button>
               {account ? (
                 <div className="oe-card absolute right-0 z-30 mt-2 w-[min(16rem,calc(100vw-1.5rem))] p-2 text-sm">
-                  <p className="break-all px-3 py-2 text-muted">{shell.email || shell.fullName || "Sem sessão"}</p>
+                  <p className="break-all px-3 py-2 text-muted">{accountLabel}</p>
                   <Link className="block rounded-lg px-3 py-2 hover:bg-accent-soft" href="/perfil">Perfil</Link>
                   <Link className="block rounded-lg px-3 py-2 hover:bg-accent-soft" href="/configuracoes">Configurações</Link>
-                  {shell.configured ? (
+                  {signedIn ? (
                     <form onSubmit={signOut}>
                       <button type="submit" className="w-full rounded-lg px-3 py-2 text-left hover:bg-accent-soft">Sair</button>
                     </form>

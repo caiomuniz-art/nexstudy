@@ -8,6 +8,7 @@ import { useApplyPageQuery } from "@/lib/client-query";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
+import { SubjectChoices } from "@/components/subject-choices";
 import { Alert, Badge, Button, Dialog, EmptyState, Field, PageHeader, SelectInput, TextArea, TextInput } from "@/components/ui";
 import { civilDateInSaoPaulo, formatDateTimeBr, isoToSaoPauloLocal } from "@/lib/dates";
 import { ASSESSMENT_LABEL, PREPARATION_LABEL, PRIORITY_LABEL } from "@/lib/labels";
@@ -106,7 +107,7 @@ export function AssessmentsView({
       </section>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Field id="filtro-materia" label="Matéria"><SelectInput id="filtro-materia" value={subjectId} onChange={(event) => setSubjectId(event.target.value)}><option value="">Todas</option>{subjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.name}</option>)}</SelectInput></Field>
+        <Field id="filtro-materia" label="Matéria"><SelectInput id="filtro-materia" value={subjectId} onChange={(event) => setSubjectId(event.target.value)}><SubjectChoices blank="Todas" /></SelectInput></Field>
         <Field id="filtro-tipo" label="Tipo"><SelectInput id="filtro-tipo" value={type} onChange={(event) => setType(event.target.value)}><option value="">Todos</option>{ASSESSMENT_TYPES.map((item) => <option key={item} value={item}>{ASSESSMENT_LABEL[item]}</option>)}</SelectInput></Field>
         <Field id="de" label="De"><TextInput id="de" type="date" value={from} onChange={(event) => setFrom(event.target.value)} /></Field>
         <Field id="ate" label="Até"><TextInput id="ate" type="date" value={to} onChange={(event) => setTo(event.target.value)} /></Field>
@@ -147,7 +148,7 @@ export function AssessmentsView({
       )}
 
       <Dialog open={dialog !== null} title={dialog && dialog !== "new" ? "Editar avaliação" : "Nova avaliação"} onClose={() => setDialog(null)}>
-        {dialog ? <AssessmentForm key={dialog === "new" ? "new" : dialog.id} item={dialog === "new" ? null : dialog} subjects={subjects} presetDate={datePreset} onCancel={() => setDialog(null)} onDone={(text) => { setMessage(text); setDialog(null); router.refresh(); }} /> : null}
+        {dialog ? <AssessmentForm key={dialog === "new" ? "new" : dialog.id} item={dialog === "new" ? null : dialog} presetDate={datePreset} onCancel={() => setDialog(null)} onDone={(text) => { setMessage(text); setDialog(null); router.refresh(); }} /> : null}
       </Dialog>
       <Dialog open={Boolean(removing)} title="Excluir avaliação" description={removing ? `Excluir “${removing.title}”?` : undefined} onClose={() => setRemoving(null)}>
         <div className="flex flex-wrap justify-end gap-2">
@@ -159,7 +160,7 @@ export function AssessmentsView({
   );
 }
 
-function AssessmentForm({ item, subjects, presetDate, onCancel, onDone }: { item: AssessmentRow | null; subjects: SubjectRow[]; presetDate: string; onCancel: () => void; onDone: (message: string) => void }) {
+function AssessmentForm({ item, presetDate, onCancel, onDone }: { item: AssessmentRow | null; presetDate: string; onCancel: () => void; onDone: (message: string) => void }) {
   const form = useForm<z.infer<typeof assessmentFormSchema>>({
     resolver: zodResolver(assessmentFormSchema),
     defaultValues: {
@@ -185,7 +186,7 @@ function AssessmentForm({ item, subjects, presetDate, onCancel, onDone }: { item
       {error ? <div className="sm:col-span-2"><Alert tone="error">{error}</Alert></div> : null}
       <div className="sm:col-span-2"><Field id="titulo-av" label="Título" error={form.formState.errors.title?.message}><TextInput id="titulo-av" {...form.register("title")} /></Field></div>
       <Field id="tipo-av" label="Tipo"><SelectInput id="tipo-av" {...form.register("type")}>{ASSESSMENT_TYPES.map((type) => <option key={type} value={type}>{ASSESSMENT_LABEL[type]}</option>)}</SelectInput></Field>
-      <Field id="materia-av" label="Matéria"><SelectInput id="materia-av" {...form.register("subject_id")}><option value="">Sem matéria</option>{subjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.name}</option>)}</SelectInput></Field>
+      <Field id="materia-av" label="Matéria"><SelectInput id="materia-av" {...form.register("subject_id")}><SubjectChoices blank="Sem matéria" /></SelectInput></Field>
       <div className="sm:col-span-2"><Field id="data-av" label="Data da avaliação ou entrega" hint="Horário de Brasília." error={form.formState.errors.exam_date?.message}><TextInput id="data-av" type="datetime-local" {...form.register("exam_date")} /></Field></div>
       <Field id="importancia" label="Importância"><SelectInput id="importancia" {...form.register("importance")}>{PRIORITIES.map((priority) => <option key={priority} value={priority}>{PRIORITY_LABEL[priority]}</option>)}</SelectInput></Field>
       <Field id="preparacao" label="Preparação"><SelectInput id="preparacao" {...form.register("preparation_status")}>{PREPARATION_STATUSES.map((status) => <option key={status} value={status}>{PREPARATION_LABEL[status]}</option>)}</SelectInput></Field>

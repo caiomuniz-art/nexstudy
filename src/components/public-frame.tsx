@@ -9,12 +9,14 @@ import { Logo } from "@/components/logo";
 import { cn } from "@/lib/text";
 
 const LINKS = [
+  { href: "/#funcionalidades", label: "Funcionalidades" },
+  { href: "/#como-funciona", label: "Como funciona" },
+  { href: "/#faq", label: "Perguntas" },
   { href: "/privacidade", label: "Privacidade" },
 ];
 
 export function PublicHeader() {
   const pathname = usePathname();
-  const home = pathname === "/";
   const [open, setOpen] = useState(false);
   const [path, setPath] = useState(pathname);
   if (path !== pathname) {
@@ -40,20 +42,16 @@ export function PublicHeader() {
             </Link>
           ))}
         </nav>
-        {home ? null : (
-          <Link href="/login" aria-current={pathname === "/login" ? "page" : undefined} className="oe-navlink shrink-0 text-sm">
-            Entrar
-          </Link>
-        )}
-        {home ? null : (
-          <Link
-            href="/cadastro"
-            aria-current={pathname === "/cadastro" ? "page" : undefined}
-            className={cn("oe-btn oe-header-cta shrink-0", pathname === "/cadastro" && "ring-2 ring-mark ring-offset-2 ring-offset-card")}
-          >
-            Criar conta
-          </Link>
-        )}
+        <Link href="/login" aria-current={pathname === "/login" ? "page" : undefined} className="oe-navlink shrink-0 text-sm">
+          Entrar
+        </Link>
+        <Link
+          href="/cadastro"
+          aria-current={pathname === "/cadastro" ? "page" : undefined}
+          className={cn("oe-btn oe-header-cta shrink-0", pathname === "/cadastro" && "ring-2 ring-mark ring-offset-2 ring-offset-card")}
+        >
+          Criar conta
+        </Link>
         <button
           type="button"
           className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg hover:bg-accent-soft lg:hidden"

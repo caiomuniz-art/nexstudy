@@ -8,6 +8,7 @@ import { useApplyPageQuery } from "@/lib/client-query";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
+import { SubjectChoices } from "@/components/subject-choices";
 import { Alert, Button, Dialog, EmptyState, Field, PageHeader, SelectInput, TextArea, TextInput } from "@/components/ui";
 import { addCivilDays, formatDateTimeBr, isoToSaoPauloLocal, startOfWeek } from "@/lib/dates";
 import { SESSION_LABEL } from "@/lib/labels";
@@ -64,7 +65,7 @@ export function StudyView({
         <p className="mt-2 text-3xl font-semibold">{sessions.some((item) => item.status === "concluida") ? formatMinutes(minutes) : "Sem sessões concluídas"}</p>
         <p className="mt-1 text-sm text-muted">Soma das sessões concluídas entre segunda e domingo.</p>
       </section>
-      <Timer subjects={subjects} onSaved={(text) => { setMessage(text); router.refresh(); }} onError={setError} />
+      <Timer onSaved={(text) => { setMessage(text); router.refresh(); }} onError={setError} />
       <section>
         <h2 className="font-semibold">Próximas sessões</h2>
         {upcoming.length === 0 ? <p className="mt-2 text-sm text-muted">Nenhuma sessão agendada.</p> : (
@@ -93,7 +94,7 @@ export function StudyView({
         {history.length === 0 ? <p className="mt-2 text-sm text-muted">As sessões concluídas aparecem aqui.</p> : <p className="mt-2 text-sm text-muted">{history.length} sessões concluídas na conta.</p>}
       </section>
       <Dialog open={dialog !== null} title={dialog && dialog !== "new" ? "Editar sessão" : "Nova sessão"} onClose={() => setDialog(null)}>
-        {dialog ? <SessionForm key={dialog === "new" ? "new" : dialog.id} item={dialog === "new" ? null : dialog} subjects={subjects} presetDate={datePreset} onCancel={() => setDialog(null)} onDone={(text) => { setMessage(text); setDialog(null); router.refresh(); }} /> : null}
+        {dialog ? <SessionForm key={dialog === "new" ? "new" : dialog.id} item={dialog === "new" ? null : dialog} presetDate={datePreset} onCancel={() => setDialog(null)} onDone={(text) => { setMessage(text); setDialog(null); router.refresh(); }} /> : null}
       </Dialog>
       <Dialog open={Boolean(removing)} title="Excluir sessão" description={removing ? `Excluir “${removing.title}”?` : undefined} onClose={() => setRemoving(null)}>
         <div className="flex flex-wrap justify-end gap-2">
@@ -105,7 +106,7 @@ export function StudyView({
   );
 }
 
-function Timer({ subjects, onSaved, onError }: { subjects: SubjectRow[]; onSaved: (message: string) => void; onError: (message: string) => void }) {
+function Timer({ onSaved, onError }: { onSaved: (message: string) => void; onError: (message: string) => void }) {
   const [running, setRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [title, setTitle] = useState("");
@@ -153,7 +154,7 @@ function Timer({ subjects, onSaved, onError }: { subjects: SubjectRow[]; onSaved
       </div>
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         <Field id="timer-title" label="O que você estudou"><TextInput id="timer-title" value={title} onChange={(event) => setTitle(event.target.value)} /></Field>
-        <Field id="timer-subject" label="Matéria"><SelectInput id="timer-subject" value={subjectId} onChange={(event) => setSubjectId(event.target.value)}><option value="">Sem matéria</option>{subjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.name}</option>)}</SelectInput></Field>
+        <Field id="timer-subject" label="Matéria"><SelectInput id="timer-subject" value={subjectId} onChange={(event) => setSubjectId(event.target.value)}><SubjectChoices blank="Sem matéria" /></SelectInput></Field>
         <div className="md:col-span-2"><Field id="timer-notes" label="Anotações"><TextArea id="timer-notes" value={notes} onChange={(event) => setNotes(event.target.value)} /></Field></div>
       </div>
       <Button type="button" className="mt-3" onClick={async () => {
@@ -172,7 +173,7 @@ function Timer({ subjects, onSaved, onError }: { subjects: SubjectRow[]; onSaved
   );
 }
 
-function SessionForm({ item, subjects, presetDate, onCancel, onDone }: { item: StudySessionRow | null; subjects: SubjectRow[]; presetDate: string; onCancel: () => void; onDone: (message: string) => void }) {
+function SessionForm({ item, presetDate, onCancel, onDone }: { item: StudySessionRow | null; presetDate: string; onCancel: () => void; onDone: (message: string) => void }) {
   const form = useForm<z.infer<typeof sessionFormSchema>>({
     resolver: zodResolver(sessionFormSchema),
     defaultValues: {
@@ -194,7 +195,7 @@ function SessionForm({ item, subjects, presetDate, onCancel, onDone }: { item: S
     <form className="grid gap-3" onSubmit={form.handleSubmit(onSubmit)} noValidate>
       {error ? <Alert tone="error">{error}</Alert> : null}
       <Field id="sessao-titulo" label="Título" error={form.formState.errors.title?.message}><TextInput id="sessao-titulo" {...form.register("title")} /></Field>
-      <Field id="sessao-materia" label="Matéria"><SelectInput id="sessao-materia" {...form.register("subject_id")}><option value="">Sem matéria</option>{subjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.name}</option>)}</SelectInput></Field>
+      <Field id="sessao-materia" label="Matéria"><SelectInput id="sessao-materia" {...form.register("subject_id")}><SubjectChoices blank="Sem matéria" /></SelectInput></Field>
       <Field id="sessao-data" label="Data e horário" hint="Horário de Brasília." error={form.formState.errors.scheduled_at?.message}><TextInput id="sessao-data" type="datetime-local" {...form.register("scheduled_at")} /></Field>
       <Field id="sessao-duracao" label="Duração (minutos)" error={form.formState.errors.duration_minutes?.message}><TextInput id="sessao-duracao" inputMode="numeric" {...form.register("duration_minutes")} /></Field>
       <Field id="sessao-status" label="Status"><SelectInput id="sessao-status" {...form.register("status")}>{SESSION_STATUSES.map((status) => <option key={status} value={status}>{SESSION_LABEL[status]}</option>)}</SelectInput></Field>

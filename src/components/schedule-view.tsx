@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -9,10 +8,12 @@ import { useApplyPageQuery } from "@/lib/client-query";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
+import { SubjectChoices } from "@/components/subject-choices";
 import { Alert, Button, Dialog, EmptyState, Field, PageHeader, SelectInput, TextInput } from "@/components/ui";
 import { formatTimeLabel } from "@/lib/dates";
 import { subjectColor, subjectName } from "@/lib/text";
 import { scheduleFormSchema } from "@/lib/validations";
+import { FIXED_SUBJECTS } from "@/lib/subjects/fixed";
 import { createSchedule, deleteSchedule, updateSchedule } from "@/server/actions";
 import { WEEK_DAYS, type ScheduleRow, type SubjectRow } from "@/types/domain";
 
@@ -59,8 +60,6 @@ export function ScheduleView({
       {urlEditId && !editing ? <Alert tone="error">Não encontramos esta aula.</Alert> : null}
       {message ? <Alert tone="success">{message}</Alert> : null}
       {error ? <Alert tone="error">{error}</Alert> : null}
-      {subjects.length === 0 ? <Alert>Cadastre uma matéria antes de montar a grade. <Link href="/materias?nova=1" className="font-medium text-accent">Criar matéria</Link></Alert> : null}
-
       <div className="lg:hidden">
         <Field id="dia-mobile" label="Dia">
           <SelectInput id="dia-mobile" value={String(day)} onChange={(event) => setDay(Number(event.target.value))}>
@@ -95,7 +94,6 @@ export function ScheduleView({
           <ScheduleForm
             key={dialog === "new" ? "new" : dialog.id}
             item={dialog === "new" ? null : dialog}
-            subjects={subjects}
             presetDay={dayPreset}
             onCancel={() => setDialog(null)}
             onDone={(text) => { setMessage(text); setError(""); setDialog(null); router.refresh(); }}
@@ -119,11 +117,11 @@ export function ScheduleView({
   );
 }
 
-function ScheduleForm({ item, subjects, presetDay, onCancel, onDone, onError }: { item: ScheduleRow | null; subjects: SubjectRow[]; presetDay: number; onCancel: () => void; onDone: (message: string) => void; onError: (message: string) => void }) {
+function ScheduleForm({ item, presetDay, onCancel, onDone, onError }: { item: ScheduleRow | null; presetDay: number; onCancel: () => void; onDone: (message: string) => void; onError: (message: string) => void }) {
   const form = useForm<z.infer<typeof scheduleFormSchema>>({
     resolver: zodResolver(scheduleFormSchema),
     defaultValues: {
-      subject_id: item?.subject_id ?? subjects[0]?.id ?? "",
+      subject_id: item?.subject_id || FIXED_SUBJECTS[0].id,
       day_of_week: item?.day_of_week ?? presetDay,
       start_time: item?.start_time.slice(0, 5) ?? "07:30",
       end_time: item?.end_time.slice(0, 5) ?? "08:20",
@@ -132,10 +130,6 @@ function ScheduleForm({ item, subjects, presetDay, onCancel, onDone, onError }: 
   });
   const [error, setError] = useState("");
   async function onSubmit(values: z.infer<typeof scheduleFormSchema>) {
-    if (subjects.length === 0) {
-      setError("Cadastre uma matéria antes de salvar a aula.");
-      return;
-    }
     const result = item ? await updateSchedule(item.id, values) : await createSchedule(values);
     if (!result.ok) { setError(result.error); onError(result.error); return; }
     onDone(result.message);
@@ -145,7 +139,7 @@ function ScheduleForm({ item, subjects, presetDay, onCancel, onDone, onError }: 
       {error ? <Alert tone="error">{error}</Alert> : null}
       <Field id="materia-h" label="Matéria" error={form.formState.errors.subject_id?.message}>
         <SelectInput id="materia-h" {...form.register("subject_id")}>
-          {subjects.length === 0 ? <option value="">Nenhuma matéria</option> : subjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.name}{subject.teacher ? ` · ${subject.teacher}` : ""}</option>)}
+          <SubjectChoices />
         </SelectInput>
       </Field>
       <Field id="dia-h" label="Dia da semana">

@@ -13,7 +13,7 @@ import { Logo } from "@/components/logo";
 import { Alert, Button, Field, TextInput } from "@/components/ui";
 import { getSiteUrl } from "@/lib/env";
 import { mapAuthError } from "@/lib/errors";
-import { internalEmail } from "@/lib/identity";
+import { browserAccounts } from "@/lib/local-account";
 import { SUPABASE_MISSING_MESSAGE } from "@/lib/messages";
 import { safeNextPath } from "@/lib/paths";
 import { createBrowserSupabase } from "@/lib/supabase/browser";
@@ -40,26 +40,17 @@ export function LoginForm({ nextPath, initialError }: { nextPath?: string; initi
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setError("");
-    const supabase = createBrowserSupabase();
-    if (!supabase) {
-      setError(SUPABASE_MISSING_MESSAGE);
+    const book = browserAccounts();
+    if (!book) {
+      setError("Não foi possível abrir a conta neste navegador.");
       return;
     }
-    const email = internalEmail(values.username);
-    if (!email) {
-      setError("Use letras ou números.");
+    const result = await book.login({ name: values.username, secret: values.password });
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password: values.password,
-    });
-    if (authError) {
-      setError(mapAuthError(authError.message));
-      return;
-    }
-    const destination = safeNextPath(next);
-    router.push(next ? `/avisos?next=${encodeURIComponent(destination)}` : "/avisos");
+    router.push(safeNextPath(next));
     router.refresh();
   }
 
@@ -95,39 +86,28 @@ export function SignupForm() {
   const [show, setShow] = useState(false);
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { fullName: "", password: "", confirmPassword: "" },
+    defaultValues: { fullName: "", password: "", confirmPassword: "", notificationContact: "" },
   });
 
   async function onSubmit(values: z.infer<typeof signupSchema>) {
     setError("");
     setInfo("");
-    const supabase = createBrowserSupabase();
-    if (!supabase) {
-      setError(SUPABASE_MISSING_MESSAGE);
+    const book = browserAccounts();
+    if (!book) {
+      setError("Não foi possível guardar a conta neste navegador.");
       return;
     }
-    const email = internalEmail(values.fullName);
-    if (!email) {
-      setError("Use letras ou números no nome.");
-      return;
-    }
-    const { data, error: authError } = await supabase.auth.signUp({
-      email,
-      password: values.password,
-      options: {
-        data: { full_name: values.fullName.trim() },
-      },
+    const result = await book.register({
+      name: values.fullName,
+      secret: values.password,
+      notificationContact: values.notificationContact ?? "",
     });
-    if (authError) {
-      setError(mapAuthError(authError.message));
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
-    if (data.session) {
-      router.push("/avisos");
-      router.refresh();
-      return;
-    }
-    setInfo("Conta criada. Entre com o mesmo nome para continuar.");
+    router.push("/dashboard");
+    router.refresh();
   }
 
   return (
@@ -137,6 +117,9 @@ export function SignupForm() {
         {info ? <Alert tone="success">{info}</Alert> : null}
         <Field id="fullName" label="Nome" error={form.formState.errors.fullName?.message}>
           <TextInput id="fullName" autoComplete="name" {...form.register("fullName")} />
+        </Field>
+        <Field id="aviso-contato" label="E-mail para avisos" hint="Opcional. Qualquer texto serve, e nada é conferido." error={form.formState.errors.notificationContact?.message}>
+          <TextInput id="aviso-contato" autoComplete="off" {...form.register("notificationContact")} />
         </Field>
         <Field id="acesso-novo" hint="No mínimo 8 caracteres, com letra e número." error={form.formState.errors.password?.message}>
           <TextInput id="acesso-novo" type={show ? "text" : "password"} autoComplete="new-password" {...form.register("password")} />

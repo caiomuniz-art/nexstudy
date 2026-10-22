@@ -11,6 +11,8 @@ import type { z } from "zod";
 
 import { Alert, Button, Field, PageHeader, SelectInput, TextInput } from "@/components/ui";
 import { mapAuthError } from "@/lib/errors";
+import { browserAccounts } from "@/lib/local-account";
+import { useLocalAccount } from "@/lib/use-local-account";
 import { SUPABASE_MISSING_MESSAGE } from "@/lib/messages";
 import { createBrowserSupabase } from "@/lib/supabase/browser";
 import { deleteAccountSchema, passwordChangeSchema, preferencesSchema } from "@/lib/validations";
@@ -35,6 +37,9 @@ export function SettingsView({
   const router = useRouter();
   const [message, setMessage] = useState(recovery ? "Senha pronta para ser redefinida. Escolha uma nova senha abaixo." : "");
   const [error, setError] = useState("");
+  const account = useLocalAccount();
+  const [contactDraft, setContactDraft] = useState<string | null>(null);
+  const contact = contactDraft ?? account?.notificationContact ?? "";
   useApplyPageQuery((pageQuery) => {
     if (pageQuery.recuperacao) setMessage("Senha pronta para ser redefinida. Escolha uma nova senha abaixo.");
   });
@@ -91,6 +96,31 @@ export function SettingsView({
         <Button type="submit" pending={preferences.formState.isSubmitting}>Salvar exibição</Button>
       </form>
 
+      {account ? (
+        <form className="oe-card oe-pad grid gap-3" onSubmit={(event) => {
+          event.preventDefault();
+          const book = browserAccounts();
+          if (!book) {
+            setError("Não foi possível guardar neste navegador.");
+            return;
+          }
+          const result = book.saveContact(contact);
+          if (!result.ok) setError(result.error);
+          else {
+            setContactDraft(null);
+            setMessage("Contato salvo neste navegador.");
+            setError("");
+          }
+        }}>
+          <h2 className="font-semibold">Avisos</h2>
+          <p className="text-sm text-muted">Opcional. Qualquer texto serve, e nada é conferido. Fica guardado com a conta neste navegador.</p>
+          <Field id="aviso-contato" label="E-mail para avisos">
+            <TextInput id="aviso-contato" autoComplete="off" value={contact} onChange={(event) => setContactDraft(event.target.value)} />
+          </Field>
+          <Button type="submit">Salvar contato</Button>
+        </form>
+      ) : null}
+
       <form className="oe-card oe-pad grid gap-3" onSubmit={password.handleSubmit(async (values) => {
         const supabase = createBrowserSupabase();
         if (!supabase) { setError(SUPABASE_MISSING_MESSAGE); return; }
@@ -108,6 +138,12 @@ export function SettingsView({
       </form>
 
       <form className="oe-card oe-pad grid gap-3 border-danger/40" onSubmit={deletion.handleSubmit(async (values) => {
+        const book = browserAccounts();
+        if (book?.current()) {
+          book.removeCurrent();
+          router.push("/");
+          return;
+        }
         const result = await deleteOwnAccount(values);
         if (!result.ok) setError(result.error);
         else router.push("/");

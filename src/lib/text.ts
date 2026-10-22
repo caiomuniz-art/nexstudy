@@ -1,3 +1,5 @@
+import { FIXED_SUBJECTS } from "@/lib/subjects/fixed";
+
 export function normalizeText(value: string) {
   return value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();
 }
@@ -24,11 +26,15 @@ export function formatMinutes(total: number) {
 
 export function subjectName(subjects: { id: string; name: string }[], subjectId: string | null) {
   if (!subjectId) return "Sem matéria";
-  return subjects.find((subject) => subject.id === subjectId)?.name ?? "Matéria removida";
+  return subjects.find((subject) => subject.id === subjectId)?.name
+    ?? FIXED_SUBJECTS.find((subject) => subject.id === subjectId)?.name
+    ?? "Matéria removida";
 }
 
 export function subjectColor(subjects: { id: string; color: string }[], subjectId: string | null) {
-  return subjects.find((subject) => subject.id === subjectId)?.color ?? "#00c2f2";
+  return subjects.find((subject) => subject.id === subjectId)?.color
+    ?? FIXED_SUBJECTS.find((subject) => subject.id === subjectId)?.color
+    ?? "#00c2f2";
 }
 
 export function cn(...parts: Array<string | false | null | undefined>) {
