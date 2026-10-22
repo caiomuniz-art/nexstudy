@@ -6,9 +6,12 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
+import Link from "next/link";
+
 import { Alert, Button, EmptyState, PageHeader } from "@/components/ui";
 import { formatDateTimeBr } from "@/lib/dates";
 import { NOTIFICATION_LABEL } from "@/lib/labels";
+import { useLocalAccount } from "@/lib/use-local-account";
 import { notificationPreferencesSchema } from "@/lib/validations";
 import { markAllNotificationsRead, markNotificationRead, updateNotificationPreferences } from "@/server/actions";
 import type { NotificationPreferencesRow, NotificationRow } from "@/types/domain";
@@ -23,6 +26,7 @@ export function NotificationsView({
   dbMessage: string | null;
 }) {
   const router = useRouter();
+  const account = useLocalAccount();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [filter, setFilter] = useState<"todas" | "nao_lidas">("todas");
@@ -45,6 +49,19 @@ export function NotificationsView({
       {dbMessage ? <Alert tone="error">{dbMessage}</Alert> : null}
       {message ? <Alert tone="success">{message}</Alert> : null}
       {error ? <Alert tone="error">{error}</Alert> : null}
+      <section className="oe-card oe-pad">
+        <h2 className="font-semibold">E-mail para avisos</h2>
+        {account ? (
+          <p className="mt-2 text-sm text-muted">
+            {account.notificationContact
+              ? <>O e-mail guardado nesta conta é: <span className="font-medium text-foreground">{account.notificationContact}</span>.</>
+              : "Nenhum e-mail para avisos foi informado."}
+            {" "}Para incluir ou mudar, use <Link href="/configuracoes" className="text-accent">Configurações</Link>. Nenhum e-mail é enviado.
+          </p>
+        ) : (
+          <p className="mt-2 text-sm text-muted">Entre na sua conta para guardar um e-mail para avisos. O campo fica em <Link href="/configuracoes" className="text-accent">Configurações</Link> e também no cadastro.</p>
+        )}
+      </section>
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant={filter === "todas" ? "primary" : "secondary"} onClick={() => setFilter("todas")}>Todas</Button>
         <Button type="button" variant={filter === "nao_lidas" ? "primary" : "secondary"} onClick={() => setFilter("nao_lidas")}>Não lidas</Button>

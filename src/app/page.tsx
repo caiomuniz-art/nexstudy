@@ -61,7 +61,7 @@ export default function HomePage() {
             </div>
             <div className="grid sm:grid-cols-[9.5rem_1fr]">
               <div className="hidden bg-sidebar p-3 text-sm text-sidebar-muted sm:block">
-                <p className="rounded-md bg-white/10 px-3 py-2 font-semibold text-white shadow-[inset_3px_0_0_var(--mark)]">Painel</p>
+                <p className="rounded-md bg-white/10 px-3 py-2 font-semibold text-white shadow-[inset_4px_0_0_var(--mark)]">Painel</p>
                 <p className="mt-1 rounded-md px-3 py-2">Tarefas</p>
                 <p className="rounded-md px-3 py-2">Calendário</p>
                 <p className="rounded-md px-3 py-2">Estudos</p>

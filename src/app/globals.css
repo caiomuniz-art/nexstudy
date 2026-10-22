@@ -1,23 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --background: #d7f4ff;
-  --foreground: #04243f;
+  --background: #e7f8ff;
+  --foreground: #02152c;
   --card: #ffffff;
-  --muted: #1a5274;
-  --border: #7ed4f5;
-  --accent: #0096c7;
-  --accent-foreground: #04243f;
-  --accent-soft: #c8f1ff;
-  --cyan: #00c2f2;
-  --cyan-ink: #04283f;
+  --muted: #003878;
+  --border: #38d0fc;
+  --accent: #005fcc;
+  --accent-foreground: #ffffff;
+  --accent-soft: #d5f6ff;
+  --cyan: #38d0fc;
+  --cyan-ink: #003878;
   --navy: #003878;
-  --mark: #00b7e6;
-  --button: #00c2f2;
-  --button-hover: #67e2ff;
-  --button-text: #04283f;
+  --mark: #38d0fc;
+  --button: #38d0fc;
+  --button-hover: #6ae6ff;
+  --button-text: #003878;
   --sidebar: #003878;
-  --sidebar-muted: #d4f3ff;
+  --sidebar-muted: #dff7ff;
   --danger: #e11d48;
   --danger-soft: #ffe4ea;
   --success: #059669;
@@ -29,23 +29,23 @@
 }
 
 .dark {
-  --background: #031624;
-  --foreground: #e7f7ff;
-  --card: #07283d;
-  --muted: #9ad4ef;
-  --border: #1a8ec4;
-  --accent: #3ad4ff;
-  --accent-foreground: #04283f;
-  --accent-soft: #0c4564;
-  --cyan: #3ad4ff;
-  --cyan-ink: #04283f;
-  --navy: #d7f3ff;
-  --mark: #3ad4ff;
-  --button: #00c2f2;
-  --button-hover: #7ae7ff;
-  --button-text: #04283f;
-  --sidebar: #02243a;
-  --sidebar-muted: #c5ecff;
+  --background: #02111d;
+  --foreground: #f4fcff;
+  --card: #04263c;
+  --muted: #c5eeff;
+  --border: #1498d4;
+  --accent: #38d0fc;
+  --accent-foreground: #003878;
+  --accent-soft: #06486a;
+  --cyan: #38d0fc;
+  --cyan-ink: #003878;
+  --navy: #003878;
+  --mark: #38d0fc;
+  --button: #38d0fc;
+  --button-hover: #7aebff;
+  --button-text: #003878;
+  --sidebar: #003878;
+  --sidebar-muted: #dff7ff;
   --danger: #fb7185;
   --danger-soft: #4c1522;
   --success: #34d399;
@@ -108,7 +108,13 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  font-weight: 500;
   letter-spacing: -0.011em;
+}
+
+h1, h2, h3 {
+  font-weight: 800;
+  letter-spacing: -0.035em;
 }
 
 :focus-visible {
@@ -142,18 +148,18 @@ body {
   display: block;
   max-width: 100%;
   text-wrap: balance;
-  color: var(--muted);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
 .oe-kicker::before {
   content: "";
   display: inline-block;
-  width: 1.5rem;
-  height: 2px;
+  width: 1.75rem;
+  height: 4px;
   margin-right: 0.75rem;
   vertical-align: middle;
   background: var(--mark);
@@ -161,37 +167,37 @@ body {
 
 .oe-display {
   margin-top: 0.85rem;
-  max-width: 14ch;
+  max-width: min(14ch, 100%);
   color: var(--foreground);
-  font-size: clamp(2.25rem, 4vw, 3.15rem);
-  font-weight: 600;
-  letter-spacing: -0.04em;
-  line-height: 1.05;
+  font-size: clamp(2.65rem, 5vw, 3.9rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.02;
 }
 
 .oe-section {
   color: var(--foreground);
-  font-size: 1.5rem;
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.2;
+  font-size: clamp(1.65rem, 2.5vw, 2.05rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
 }
 
 .oe-section::after {
   content: "";
   display: block;
-  width: 2.25rem;
-  height: 2px;
-  margin-top: 0.65rem;
+  width: 3.25rem;
+  height: 4px;
+  margin-top: 0.7rem;
   background: var(--mark);
 }
 
 .oe-label {
-  border-left: 2px solid var(--mark);
-  padding-left: 0.5rem;
-  color: var(--foreground);
-  font-size: 0.875rem;
-  font-weight: 600;
+  border-left: 4px solid var(--mark);
+  padding-left: 0.55rem;
+  color: var(--accent);
+  font-size: 0.95rem;
+  font-weight: 800;
   letter-spacing: -0.01em;
 }
 
@@ -204,10 +210,10 @@ body {
   background: var(--button);
   color: var(--button-text);
   padding: 0 1.1rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  box-shadow: inset 0 -2px 0 var(--mark);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  box-shadow: inset 0 -3px 0 #003878;
 }
 
 .oe-btn:hover { background: var(--button-hover); }
@@ -227,10 +233,10 @@ body {
   display: inline-flex;
   height: 2.25rem;
   align-items: center;
-  color: var(--foreground);
+  color: var(--accent);
   font-size: 0.875rem;
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .oe-navlink::after {
@@ -239,7 +245,7 @@ body {
   right: 0;
   bottom: 0.15rem;
   left: 0;
-  height: 2px;
+  height: 4px;
   background: var(--mark);
   transform: scaleX(0);
   transform-origin: left center;
@@ -249,7 +255,7 @@ body {
 .oe-navlink:hover::after,
 .oe-navlink[aria-current="page"]::after { transform: scaleX(1); }
 
-.oe-navlink[aria-current="page"] { font-weight: 600; }
+.oe-navlink[aria-current="page"] { font-weight: 800; }
 
 [data-density="compacta"] .oe-pad { padding: 0.75rem !important; }
 

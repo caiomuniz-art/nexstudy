@@ -133,8 +133,8 @@ export function AppShell({ shell, children }: { shell: ShellInfo; children: Reac
                   className={cn(
                     "flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm tracking-tight text-sidebar-muted shadow-[inset_3px_0_0_transparent] transition",
                     active
-                      ? "bg-white/10 font-semibold text-white shadow-[inset_3px_0_0_var(--mark)]"
-                      : "hover:bg-white/8 hover:text-white hover:shadow-[inset_3px_0_0_var(--mark)]",
+                      ? "bg-white/10 font-semibold text-white shadow-[inset_4px_0_0_var(--mark)]"
+                      : "hover:bg-white/8 hover:text-white hover:shadow-[inset_4px_0_0_var(--mark)]",
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" aria-hidden />
@@ -146,13 +146,13 @@ export function AppShell({ shell, children }: { shell: ShellInfo; children: Reac
           <div className="border-t border-white/10 p-3">
             {signedIn ? (
               <form onSubmit={signOut}>
-                <button type="submit" className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-sidebar-muted shadow-[inset_3px_0_0_transparent] transition hover:bg-white/8 hover:text-white hover:shadow-[inset_3px_0_0_var(--mark)]">
+                <button type="submit" className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-sidebar-muted shadow-[inset_3px_0_0_transparent] transition hover:bg-white/8 hover:text-white hover:shadow-[inset_4px_0_0_var(--mark)]">
                   <LogOut className="h-4 w-4" aria-hidden />
                   Sair
                 </button>
               </form>
             ) : (
-              <Link href="/login" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-sidebar-muted shadow-[inset_3px_0_0_transparent] transition hover:bg-white/8 hover:text-white hover:shadow-[inset_3px_0_0_var(--mark)]">
+              <Link href="/login" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-sidebar-muted shadow-[inset_3px_0_0_transparent] transition hover:bg-white/8 hover:text-white hover:shadow-[inset_4px_0_0_var(--mark)]">
                 Entrar
               </Link>
             )}

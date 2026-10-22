@@ -15,7 +15,7 @@ export function WeeklyChart({ data }: { data: { label: string; concluidas: numbe
           <XAxis dataKey="label" tick={{ fill: "var(--muted)", fontSize: 12 }} />
           <YAxis allowDecimals={false} tick={{ fill: "var(--muted)", fontSize: 12 }} />
           <Tooltip />
-          <Bar dataKey="concluidas" name="Concluídas" fill="#2ad4ff" radius={6} />
+          <Bar dataKey="concluidas" name="Concluídas" fill="#38d0fc" radius={6} />
         </BarChart>
       </ResponsiveContainer>
       </div>
@@ -53,7 +53,7 @@ export function ReportCharts({
                 <XAxis dataKey="label" tick={{ fill: "var(--muted)", fontSize: 12 }} />
                 <YAxis allowDecimals={false} tick={{ fill: "var(--muted)", fontSize: 12 }} />
                 <Tooltip />
-                <Bar dataKey="concluidas" name="Concluídas" fill="#2ad4ff" radius={6} />
+                <Bar dataKey="concluidas" name="Concluídas" fill="#38d0fc" radius={6} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -67,7 +67,7 @@ export function ReportCharts({
               <XAxis dataKey="label" tick={{ fill: "var(--muted)", fontSize: 12 }} />
               <YAxis allowDecimals={false} tick={{ fill: "var(--muted)", fontSize: 12 }} />
               <Tooltip />
-              <Line dataKey="concluidas" name="Concluídas" stroke="#2ad4ff" strokeWidth={2} dot={false} />
+              <Line dataKey="concluidas" name="Concluídas" stroke="#38d0fc" strokeWidth={3} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -80,7 +80,7 @@ export function ReportCharts({
               <XAxis dataKey="label" tick={{ fill: "var(--muted)", fontSize: 12 }} />
               <YAxis allowDecimals={false} tick={{ fill: "var(--muted)", fontSize: 12 }} />
               <Tooltip />
-              <Bar dataKey="minutos" name="Minutos" fill="#8b5cf6" radius={6} />
+              <Bar dataKey="minutos" name="Minutos" fill="#003878" radius={6} />
             </BarChart>
           </ResponsiveContainer>
         </div>

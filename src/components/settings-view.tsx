@@ -96,30 +96,29 @@ export function SettingsView({
         <Button type="submit" pending={preferences.formState.isSubmitting}>Salvar exibição</Button>
       </form>
 
-      {account ? (
-        <form className="oe-card oe-pad grid gap-3" onSubmit={(event) => {
-          event.preventDefault();
-          const book = browserAccounts();
-          if (!book) {
-            setError("Não foi possível guardar neste navegador.");
-            return;
-          }
-          const result = book.saveContact(contact);
-          if (!result.ok) setError(result.error);
-          else {
-            setContactDraft(null);
-            setMessage("Contato salvo neste navegador.");
-            setError("");
-          }
-        }}>
-          <h2 className="font-semibold">Avisos</h2>
-          <p className="text-sm text-muted">Opcional. Qualquer texto serve, e nada é conferido. Fica guardado com a conta neste navegador.</p>
-          <Field id="aviso-contato" label="E-mail para avisos">
-            <TextInput id="aviso-contato" autoComplete="off" value={contact} onChange={(event) => setContactDraft(event.target.value)} />
-          </Field>
-          <Button type="submit">Salvar contato</Button>
-        </form>
-      ) : null}
+      <form className="oe-card oe-pad grid gap-3 border-mark/40" onSubmit={(event) => {
+        event.preventDefault();
+        const book = browserAccounts();
+        if (!book?.current()) {
+          setError("Entre na sua conta para guardar este e-mail.");
+          return;
+        }
+        const result = book.saveContact(contact);
+        if (!result.ok) setError(result.error);
+        else {
+          setContactDraft(null);
+          setMessage("E-mail para avisos salvo neste navegador.");
+          setError("");
+        }
+      }}>
+        <h2 className="font-semibold">E-mail para avisos</h2>
+        <p className="text-sm text-muted">Quer incluir ou trocar o e-mail dos avisos? O campo é opcional, aceita qualquer texto e não confere se o endereço existe. Nenhum e-mail é enviado.</p>
+        <Field id="aviso-contato" label="E-mail para avisos">
+          <TextInput id="aviso-contato" autoComplete="off" placeholder="Opcional" value={contact} onChange={(event) => setContactDraft(event.target.value)} />
+        </Field>
+        {account ? null : <p className="text-sm text-muted">Entre na sua conta para guardar este texto. O visitante continua sem conta.</p>}
+        <Button type="submit">Salvar e-mail</Button>
+      </form>
 
       <form className="oe-card oe-pad grid gap-3" onSubmit={password.handleSubmit(async (values) => {
         const supabase = createBrowserSupabase();

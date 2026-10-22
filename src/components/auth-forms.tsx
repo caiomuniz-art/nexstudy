@@ -118,9 +118,11 @@ export function SignupForm() {
         <Field id="fullName" label="Nome" error={form.formState.errors.fullName?.message}>
           <TextInput id="fullName" autoComplete="name" {...form.register("fullName")} />
         </Field>
-        <Field id="aviso-contato" label="E-mail para avisos" hint="Opcional. Qualquer texto serve, e nada é conferido." error={form.formState.errors.notificationContact?.message}>
-          <TextInput id="aviso-contato" autoComplete="off" {...form.register("notificationContact")} />
-        </Field>
+        <div className="rounded-xl border border-mark/50 bg-accent-soft p-3">
+          <Field id="aviso-contato" label="E-mail para avisos" hint="Opcional. Quer receber avisos? Qualquer texto serve. O cadastro segue mesmo se este campo ficar vazio." error={form.formState.errors.notificationContact?.message}>
+            <TextInput id="aviso-contato" autoComplete="off" placeholder="Opcional" aria-describedby="aviso-contato-hint" {...form.register("notificationContact")} />
+          </Field>
+        </div>
         <Field id="acesso-novo" hint="No mínimo 8 caracteres, com letra e número." error={form.formState.errors.password?.message}>
           <TextInput id="acesso-novo" type={show ? "text" : "password"} autoComplete="new-password" {...form.register("password")} />
         </Field>
