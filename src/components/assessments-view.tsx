@@ -14,12 +14,13 @@ import { civilDateInSaoPaulo, formatDateTimeBr, isoToSaoPauloLocal } from "@/lib
 import { ASSESSMENT_LABEL, PREPARATION_LABEL, PRIORITY_LABEL } from "@/lib/labels";
 import { subjectName } from "@/lib/text";
 import { assessmentFormSchema } from "@/lib/validations";
+import { useLocalBook } from "@/lib/use-local-book";
 import { createAssessment, deleteAssessment, setAssessmentCompleted, setAssessmentPreparation, updateAssessment } from "@/server/actions";
 import { ASSESSMENT_TYPES, PREPARATION_STATUSES, PRIORITIES, type AssessmentRow, type SubjectRow } from "@/types/domain";
 
 export function AssessmentsView({
-  assessments,
-  subjects,
+  assessments: serverAssessments,
+  subjects: serverSubjects,
   nowIso,
   nova,
   editId,
@@ -34,6 +35,9 @@ export function AssessmentsView({
   presetDate: string;
   dbMessage: string | null;
 }) {
+  const stored = useLocalBook();
+  const assessments = stored ? stored.assessments : serverAssessments;
+  const subjects = stored ? stored.subjects : serverSubjects;
   const router = useRouter();
   const now = useMemo(() => new Date(nowIso), [nowIso]);
   const [urlEditId, setUrlEditId] = useState(editId);

@@ -14,6 +14,8 @@ import { summarizeSubject } from "@/lib/subjects/summary";
 import { filterTasks, taskCounts } from "@/lib/tasks/query";
 import { internalEmail } from "@/lib/identity";
 import { createAccountBook } from "@/lib/local-account";
+import { translateText } from "@/lib/i18n-phrases";
+import { createLocalWorkspace } from "@/lib/local-workspace";
 import { loginSchema, scheduleFormSchema, signupSchema, taskFormSchema } from "@/lib/validations";
 import type { AssessmentRow, ScheduleRow, StudySessionRow, SubjectRow, TaskRow } from "@/types/domain";
 
@@ -427,6 +429,84 @@ describe("validação, paginação e caminhos", () => {
     expect(safeNextPath("https://evil.example")).toBe("/dashboard");
     expect(safeNextPath("//evil.example")).toBe("/dashboard");
     expect(safeNextPath("/perfil?ok=1")).toBe("/perfil?ok=1");
+  });
+
+  it("grava aula e tarefa neste navegador e recusa horário sobreposto", () => {
+    const memory = new Map<string, string>();
+    const store = {
+      getItem: (key: string) => memory.get(key) ?? null,
+      setItem: (key: string, value: string) => { memory.set(key, value); },
+      removeItem: (key: string) => { memory.delete(key); },
+    };
+    const workspace = createLocalWorkspace(store, () => "visitante");
+    const historia = "a1000000-0000-4000-8000-000000000003";
+    const created = workspace.createSchedule({
+      subject_id: historia,
+      day_of_week: 1,
+      start_time: "07:30",
+      end_time: "08:20",
+      room: "2",
+    });
+    expect(created.ok).toBe(true);
+    expect(workspace.read().schedules[0]).toMatchObject({
+      subject_id: historia,
+      day_of_week: 1,
+      start_time: "07:30",
+      end_time: "08:20",
+      room: "2",
+    });
+    const overlap = workspace.createSchedule({
+      subject_id: historia,
+      day_of_week: 1,
+      start_time: "08:00",
+      end_time: "08:50",
+      room: "3",
+    });
+    expect(overlap.ok).toBe(false);
+    const task = workspace.createTask({
+      title: "Ler capítulo",
+      description: "",
+      subject_id: historia,
+      due_at: "",
+      priority: "alta",
+      status: "pendente",
+      estimated_minutes: "",
+      category: "tarefa",
+      notes: "",
+    });
+    expect(task.ok).toBe(true);
+    const again = createLocalWorkspace(store, () => "visitante").read();
+    expect(again.tasks).toHaveLength(1);
+    expect(again.tasks[0]?.title).toBe("Ler capítulo");
+    expect(again.schedules).toHaveLength(1);
+    const removed = workspace.deleteTask(again.tasks[0]?.id ?? "");
+    expect(removed.ok).toBe(true);
+    expect(workspace.read().tasks).toHaveLength(0);
+    expect(workspace.read().schedules).toHaveLength(1);
+  });
+
+  it("troca a sequência secreta da conta guardada neste navegador", async () => {
+    const memory = new Map<string, string>();
+    const store = {
+      getItem: (key: string) => memory.get(key) ?? null,
+      setItem: (key: string, value: string) => { memory.set(key, value); },
+      removeItem: (key: string) => { memory.delete(key); },
+    };
+    const book = createAccountBook(store);
+    expect((await book.register({ name: "Ana Souza", secret: "rota1234" })).ok).toBe(true);
+    expect((await book.changeSecret("nova1234")).ok).toBe(true);
+    book.logout();
+    expect((await book.login({ name: "Ana Souza", secret: "rota1234" })).ok).toBe(false);
+    expect((await book.login({ name: "Ana Souza", secret: "nova1234" })).ok).toBe(true);
+  });
+
+  it("traduz a interface para inglês sem mexer no texto em volta", () => {
+    expect(translateText("Grade horária")).toBe("Timetable");
+    expect(translateText("História")).toBe("History");
+    expect(translateText("  Salvar  ")).toBe("  Save  ");
+    expect(translateText("Bom dia, Ana")).toBe("Good morning, Ana");
+    expect(translateText("2 de 5 tarefas concluídas.")).toBe("2 of 5 tasks completed.");
+    expect(translateText("Continuar como visitante")).toBe("Continue as a guest");
   });
 
   it("traduz erros de banco e autenticação", () => {

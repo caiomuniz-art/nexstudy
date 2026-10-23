@@ -13,14 +13,15 @@ import { Alert, Button, Dialog, EmptyState, Field, PageHeader, SelectInput, Text
 import { summarizeSubject } from "@/lib/subjects/summary";
 import { formatMinutes } from "@/lib/text";
 import { subjectFormSchema } from "@/lib/validations";
+import { useLocalBook } from "@/lib/use-local-book";
 import { createSubject, deleteSubject, updateSubject } from "@/server/actions";
 import { SUBJECT_COLORS, type AssessmentRow, type StudySessionRow, type SubjectRow, type TaskRow } from "@/types/domain";
 
 export function SubjectsView({
-  subjects,
-  tasks,
-  assessments,
-  sessions,
+  subjects: serverSubjects,
+  tasks: serverTasks,
+  assessments: serverAssessments,
+  sessions: serverSessions,
   nova,
   editId,
   dbMessage,
@@ -33,6 +34,11 @@ export function SubjectsView({
   editId: string;
   dbMessage: string | null;
 }) {
+  const stored = useLocalBook();
+  const subjects = stored ? stored.subjects : serverSubjects;
+  const tasks = stored ? stored.tasks : serverTasks;
+  const assessments = stored ? stored.assessments : serverAssessments;
+  const sessions = stored ? stored.sessions : serverSessions;
   const router = useRouter();
   const editing = subjects.find((item) => item.id === editId) ?? null;
   const [dialog, setDialog] = useState<SubjectRow | "new" | null>(editing ?? (nova ? "new" : null));

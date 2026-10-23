@@ -4,6 +4,8 @@ import "@fontsource/plus-jakarta-sans/500.css";
 import "@fontsource/plus-jakarta-sans/600.css";
 import "@fontsource/plus-jakarta-sans/700.css";
 
+import { LanguageBridge } from "@/components/language-bridge";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,7 +16,7 @@ export const metadata: Metadata = {
   description: "Organize tarefas, provas, horários e estudos em um só lugar.",
 };
 
-const themeScript = `try{var t=localStorage.getItem("oe-theme");var d=t==="dark"||((t==="system"||!t)&&matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.documentElement.classList.add("dark")}catch(e){}`;
+const themeScript = `try{var t=localStorage.getItem("oe-theme");var d=t==="dark"||((t==="system"||!t)&&matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.documentElement.classList.add("dark");if(localStorage.getItem("nexstudy.idioma")==="en")document.documentElement.lang="en"}catch(e){}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -27,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <span className="oe-shape oe-shape-block" />
         </div>
         <a className="skip-link" href="#conteudo">Ir para o conteúdo</a>
+        <LanguageBridge />
         {children}
       </body>
     </html>

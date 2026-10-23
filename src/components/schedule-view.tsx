@@ -14,12 +14,13 @@ import { formatTimeLabel } from "@/lib/dates";
 import { subjectColor, subjectName } from "@/lib/text";
 import { scheduleFormSchema } from "@/lib/validations";
 import { FIXED_SUBJECTS } from "@/lib/subjects/fixed";
+import { useLocalBook } from "@/lib/use-local-book";
 import { createSchedule, deleteSchedule, updateSchedule } from "@/server/actions";
 import { WEEK_DAYS, type ScheduleRow, type SubjectRow } from "@/types/domain";
 
 export function ScheduleView({
-  schedules,
-  subjects,
+  schedules: serverSchedules,
+  subjects: serverSubjects,
   nova,
   editId,
   presetDay,
@@ -32,6 +33,9 @@ export function ScheduleView({
   presetDay: number;
   dbMessage: string | null;
 }) {
+  const stored = useLocalBook();
+  const schedules = stored ? stored.schedules : serverSchedules;
+  const subjects = stored ? stored.subjects : serverSubjects;
   const router = useRouter();
   const [urlEditId, setUrlEditId] = useState(editId);
   const [dayPreset, setDayPreset] = useState(presetDay);

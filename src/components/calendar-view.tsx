@@ -8,15 +8,16 @@ import { buildCalendarItems } from "@/lib/calendar/items";
 import { addCivilDays, formatCivilBr, formatLongCivil, monthMatrix, shiftAnchor, startOfWeek, visibleDates } from "@/lib/dates";
 import { CALENDAR_KIND_LABEL } from "@/lib/labels";
 import { cn } from "@/lib/text";
+import { useLocalBook } from "@/lib/use-local-book";
 import type { AssessmentRow, ScheduleRow, StudySessionRow, SubjectRow, TaskRow } from "@/types/domain";
 import { WEEK_DAYS } from "@/types/domain";
 
 export function CalendarView({
-  tasks,
-  assessments,
-  sessions,
-  schedules,
-  subjects,
+  tasks: serverTasks,
+  assessments: serverAssessments,
+  sessions: serverSessions,
+  schedules: serverSchedules,
+  subjects: serverSubjects,
   today,
 }: {
   tasks: TaskRow[];
@@ -26,6 +27,12 @@ export function CalendarView({
   subjects: SubjectRow[];
   today: string;
 }) {
+  const stored = useLocalBook();
+  const tasks = stored ? stored.tasks : serverTasks;
+  const assessments = stored ? stored.assessments : serverAssessments;
+  const sessions = stored ? stored.sessions : serverSessions;
+  const schedules = stored ? stored.schedules : serverSchedules;
+  const subjects = stored ? stored.subjects : serverSubjects;
   const [view, setView] = useState<"mes" | "semana" | "dia">("mes");
   const [anchor, setAnchor] = useState(today);
   const [selected, setSelected] = useState(today);

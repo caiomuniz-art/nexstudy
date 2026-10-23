@@ -15,12 +15,13 @@ import { SESSION_LABEL } from "@/lib/labels";
 import { studiedMinutesInRange } from "@/lib/reports/build";
 import { formatMinutes, subjectName } from "@/lib/text";
 import { sessionFormSchema } from "@/lib/validations";
+import { useLocalBook } from "@/lib/use-local-book";
 import { createSession, deleteSession, saveTimerSession, setSessionStatus, updateSession } from "@/server/actions";
 import { SESSION_STATUSES, type StudySessionRow, type SubjectRow } from "@/types/domain";
 
 export function StudyView({
-  sessions,
-  subjects,
+  sessions: serverSessions,
+  subjects: serverSubjects,
   today,
   nova,
   editId,
@@ -35,6 +36,9 @@ export function StudyView({
   presetDate: string;
   dbMessage: string | null;
 }) {
+  const stored = useLocalBook();
+  const sessions = stored ? stored.sessions : serverSessions;
+  const subjects = stored ? stored.subjects : serverSubjects;
   const router = useRouter();
   const editing = sessions.find((item) => item.id === editId) ?? null;
   const [datePreset, setDatePreset] = useState(presetDate);

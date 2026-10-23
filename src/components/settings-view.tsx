@@ -12,15 +12,15 @@ import type { z } from "zod";
 import { Alert, Button, Field, PageHeader, SelectInput, TextInput } from "@/components/ui";
 import { mapAuthError } from "@/lib/errors";
 import { browserAccounts } from "@/lib/local-account";
+import { browserWorkspace } from "@/lib/local-workspace";
 import { useLocalAccount } from "@/lib/use-local-account";
-import { SUPABASE_MISSING_MESSAGE } from "@/lib/messages";
+import { useLocalBook } from "@/lib/use-local-book";
 import { createBrowserSupabase } from "@/lib/supabase/browser";
 import { deleteAccountSchema, passwordChangeSchema, preferencesSchema } from "@/lib/validations";
 import { deleteOwnAccount, updatePreferences } from "@/server/actions";
 import { DENSITIES, TASK_VIEWS, THEMES, type Density, type TaskView, type Theme } from "@/types/domain";
 
 export function SettingsView({
-  configured,
   theme,
   tasksView,
   density,
@@ -38,14 +38,14 @@ export function SettingsView({
   const [message, setMessage] = useState(recovery ? "Senha pronta para ser redefinida. Escolha uma nova senha abaixo." : "");
   const [error, setError] = useState("");
   const account = useLocalAccount();
+  const stored = useLocalBook();
+  const themeValue = stored?.preferences?.theme ?? theme;
+  const tasksValue = stored?.preferences?.tasks_view ?? tasksView;
+  const densityValue = stored?.preferences?.density ?? density;
   const [contactDraft, setContactDraft] = useState<string | null>(null);
   const contact = contactDraft ?? account?.notificationContact ?? "";
   useApplyPageQuery((pageQuery) => {
     if (pageQuery.recuperacao) setMessage("Senha pronta para ser redefinida. Escolha uma nova senha abaixo.");
-  });
-  const preferences = useForm<z.infer<typeof preferencesSchema>>({
-    resolver: zodResolver(preferencesSchema),
-    defaultValues: { theme, tasks_view: tasksView, density },
   });
   const password = useForm<z.infer<typeof passwordChangeSchema>>({
     resolver: zodResolver(passwordChangeSchema),
@@ -63,38 +63,14 @@ export function SettingsView({
       {message ? <Alert tone="success">{message}</Alert> : null}
       {error ? <Alert tone="error">{error}</Alert> : null}
 
-      <form className="oe-card oe-pad grid gap-3" onSubmit={preferences.handleSubmit(async (values) => {
-        localStorage.setItem("oe-theme", values.theme);
-        localStorage.setItem("oe-tasks-view", values.tasks_view);
-        localStorage.setItem("oe-density", values.density);
-        const dark = values.theme === "dark" || (values.theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-        document.documentElement.classList.toggle("dark", dark);
-        if (!configured) {
-          setMessage("Preferências salvas neste navegador.");
-          return;
-        }
-        const result = await updatePreferences(values);
-        if (!result.ok) setError(result.error);
-        else { setMessage(result.message); setError(""); router.refresh(); }
-      })}>
-        <h2 className="font-semibold">Exibição</h2>
-        <Field id="tema" label="Tema">
-          <SelectInput id="tema" {...preferences.register("theme")}>
-            {THEMES.map((item) => <option key={item} value={item}>{item === "light" ? "Claro" : item === "dark" ? "Escuro" : "Sistema"}</option>)}
-          </SelectInput>
-        </Field>
-        <Field id="visao" label="Tarefas">
-          <SelectInput id="visao" {...preferences.register("tasks_view")}>
-            {TASK_VIEWS.map((item) => <option key={item} value={item}>{item === "lista" ? "Lista" : "Cartões"}</option>)}
-          </SelectInput>
-        </Field>
-        <Field id="densidade" label="Densidade">
-          <SelectInput id="densidade" {...preferences.register("density")}>
-            {DENSITIES.map((item) => <option key={item} value={item}>{item === "confortavel" ? "Confortável" : "Compacta"}</option>)}
-          </SelectInput>
-        </Field>
-        <Button type="submit" pending={preferences.formState.isSubmitting}>Salvar exibição</Button>
-      </form>
+      <DisplayForm
+        key={`${themeValue}:${tasksValue}:${densityValue}`}
+        theme={themeValue}
+        tasksView={tasksValue}
+        density={densityValue}
+        onSaved={(text) => { setMessage(text); setError(""); }}
+        onError={setError}
+      />
 
       <form className="oe-card oe-pad grid gap-3 border-mark/40" onSubmit={(event) => {
         event.preventDefault();
@@ -122,7 +98,19 @@ export function SettingsView({
 
       <form className="oe-card oe-pad grid gap-3" onSubmit={password.handleSubmit(async (values) => {
         const supabase = createBrowserSupabase();
-        if (!supabase) { setError(SUPABASE_MISSING_MESSAGE); return; }
+        if (!supabase) {
+          const book = browserAccounts();
+          if (!book?.current()) {
+            setError("Entre na sua conta para trocar a sequência secreta. O visitante não tem conta.");
+            return;
+          }
+          const changed = await book.changeSecret(values.password);
+          if (!changed.ok) { setError(changed.error); return; }
+          password.reset();
+          setMessage("Sequência secreta atualizada neste navegador.");
+          setError("");
+          return;
+        }
         const { error: authError } = await supabase.auth.updateUser({ password: values.password });
         if (authError) { setError(mapAuthError(authError.message)); return; }
         password.reset();
@@ -139,6 +127,7 @@ export function SettingsView({
       <form className="oe-card oe-pad grid gap-3 border-danger/40" onSubmit={deletion.handleSubmit(async (values) => {
         const book = browserAccounts();
         if (book?.current()) {
+          browserWorkspace()?.clear();
           book.removeCurrent();
           router.push("/");
           return;
@@ -153,5 +142,56 @@ export function SettingsView({
         <Button type="submit" variant="danger" pending={deletion.formState.isSubmitting}>Excluir minha conta</Button>
       </form>
     </div>
+  );
+}
+
+function DisplayForm({
+  theme,
+  tasksView,
+  density,
+  onSaved,
+  onError,
+}: {
+  theme: Theme;
+  tasksView: TaskView;
+  density: Density;
+  onSaved: (message: string) => void;
+  onError: (message: string) => void;
+}) {
+  const router = useRouter();
+  const preferences = useForm<z.infer<typeof preferencesSchema>>({
+    resolver: zodResolver(preferencesSchema),
+    defaultValues: { theme, tasks_view: tasksView, density },
+  });
+
+  return (
+    <form className="oe-card oe-pad grid gap-3" onSubmit={preferences.handleSubmit(async (values) => {
+      localStorage.setItem("oe-theme", values.theme);
+      localStorage.setItem("oe-tasks-view", values.tasks_view);
+      localStorage.setItem("oe-density", values.density);
+      const dark = values.theme === "dark" || (values.theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      document.documentElement.classList.toggle("dark", dark);
+      const result = await updatePreferences(values);
+      if (!result.ok) onError(result.error);
+      else { onSaved(result.message); router.refresh(); }
+    })}>
+      <h2 className="font-semibold">Exibição</h2>
+      <Field id="tema" label="Tema">
+        <SelectInput id="tema" {...preferences.register("theme")}>
+          {THEMES.map((item) => <option key={item} value={item}>{item === "light" ? "Claro" : item === "dark" ? "Escuro" : "Sistema"}</option>)}
+        </SelectInput>
+      </Field>
+      <Field id="visao" label="Tarefas">
+        <SelectInput id="visao" {...preferences.register("tasks_view")}>
+          {TASK_VIEWS.map((item) => <option key={item} value={item}>{item === "lista" ? "Lista" : "Cartões"}</option>)}
+        </SelectInput>
+      </Field>
+      <Field id="densidade" label="Densidade">
+        <SelectInput id="densidade" {...preferences.register("density")}>
+          {DENSITIES.map((item) => <option key={item} value={item}>{item === "confortavel" ? "Confortável" : "Compacta"}</option>)}
+        </SelectInput>
+      </Field>
+      <Button type="submit" pending={preferences.formState.isSubmitting}>Salvar exibição</Button>
+    </form>
   );
 }

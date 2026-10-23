@@ -1,6 +1,7 @@
 import type { ZodError } from "zod";
 
 import { mapDbError } from "@/lib/errors";
+import { browserWorkspace } from "@/lib/local-workspace";
 import { findScheduleOverlap } from "@/lib/schedule/overlap";
 import { SUPABASE_MISSING_MESSAGE } from "@/lib/messages";
 import { createBrowserSupabase } from "@/lib/supabase/browser";
@@ -48,6 +49,7 @@ function invalid(error: ZodError): ActionResult {
 }
 
 export async function createTask(input: unknown): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.createTask(input) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   const parsed = taskFormSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   const auth = await requireUser();
@@ -64,6 +66,7 @@ export async function createTask(input: unknown): Promise<ActionResult> {
 }
 
 export async function updateTask(id: string, input: unknown): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.updateTask(id, input) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   if (!idSchema.safeParse(id).success) return { ok: false, error: "Identificador inválido." };
   const parsed = taskFormSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
@@ -84,6 +87,7 @@ export async function updateTask(id: string, input: unknown): Promise<ActionResu
 }
 
 export async function setTaskStatus(id: string, status: TaskStatus): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.setTaskStatus(id, status) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   if (!idSchema.safeParse(id).success) return { ok: false, error: "Identificador inválido." };
   if (!["pendente", "em_andamento", "concluida"].includes(status)) return { ok: false, error: "Status inválido." };
   const auth = await requireUser();
@@ -102,10 +106,12 @@ export async function setTaskStatus(id: string, status: TaskStatus): Promise<Act
 }
 
 export async function deleteTask(id: string): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.deleteTask(id) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   return deleteOwned("tasks", id, "Tarefa excluída.");
 }
 
 export async function createSubject(input: unknown): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.createSubject(input) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   const parsed = subjectFormSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   const auth = await requireUser();
@@ -117,6 +123,7 @@ export async function createSubject(input: unknown): Promise<ActionResult> {
 }
 
 export async function updateSubject(id: string, input: unknown): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.updateSubject(id, input) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   if (!idSchema.safeParse(id).success) return { ok: false, error: "Identificador inválido." };
   const parsed = subjectFormSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
@@ -129,10 +136,12 @@ export async function updateSubject(id: string, input: unknown): Promise<ActionR
 }
 
 export async function deleteSubject(id: string): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.deleteSubject(id) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   return deleteOwned("subjects", id, "Matéria excluída. Tarefas, provas, aulas e sessões ligadas a ela foram desvinculadas, não apagadas.");
 }
 
 export async function createAssessment(input: unknown): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.createAssessment(input) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   const parsed = assessmentFormSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   const auth = await requireUser();
@@ -144,6 +153,7 @@ export async function createAssessment(input: unknown): Promise<ActionResult> {
 }
 
 export async function updateAssessment(id: string, input: unknown): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.updateAssessment(id, input) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   if (!idSchema.safeParse(id).success) return { ok: false, error: "Identificador inválido." };
   const parsed = assessmentFormSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
@@ -156,6 +166,7 @@ export async function updateAssessment(id: string, input: unknown): Promise<Acti
 }
 
 export async function setAssessmentPreparation(id: string, preparation: string): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.setAssessmentPreparation(id, preparation) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   if (!idSchema.safeParse(id).success) return { ok: false, error: "Identificador inválido." };
   if (!["nao_iniciada", "em_andamento", "revisando", "preparado"].includes(preparation)) {
     return { ok: false, error: "Status de preparação inválido." };
@@ -169,6 +180,7 @@ export async function setAssessmentPreparation(id: string, preparation: string):
 }
 
 export async function setAssessmentCompleted(id: string, completed: boolean): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.setAssessmentCompleted(id, completed) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   if (!idSchema.safeParse(id).success) return { ok: false, error: "Identificador inválido." };
   const auth = await requireUser();
   if (!auth.ok) return auth;
@@ -183,10 +195,12 @@ export async function setAssessmentCompleted(id: string, completed: boolean): Pr
 }
 
 export async function deleteAssessment(id: string): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.deleteAssessment(id) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   return deleteOwned("assessments", id, "Registro excluído.");
 }
 
 export async function createSchedule(input: unknown): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.createSchedule(input) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   const parsed = scheduleFormSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   const auth = await requireUser();
@@ -208,6 +222,7 @@ export async function createSchedule(input: unknown): Promise<ActionResult> {
 }
 
 export async function updateSchedule(id: string, input: unknown): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.updateSchedule(id, input) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   if (!idSchema.safeParse(id).success) return { ok: false, error: "Identificador inválido." };
   const parsed = scheduleFormSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
@@ -230,10 +245,12 @@ export async function updateSchedule(id: string, input: unknown): Promise<Action
 }
 
 export async function deleteSchedule(id: string): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.deleteSchedule(id) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   return deleteOwned("class_schedules", id, "Aula removida da grade.");
 }
 
 export async function createSession(input: unknown): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.createSession(input) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   const parsed = sessionFormSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   const auth = await requireUser();
@@ -250,6 +267,7 @@ export async function createSession(input: unknown): Promise<ActionResult> {
 }
 
 export async function updateSession(id: string, input: unknown): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.updateSession(id, input) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   if (!idSchema.safeParse(id).success) return { ok: false, error: "Identificador inválido." };
   const parsed = sessionFormSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
@@ -263,6 +281,7 @@ export async function updateSession(id: string, input: unknown): Promise<ActionR
 }
 
 export async function setSessionStatus(id: string, status: "agendada" | "concluida" | "cancelada"): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.setSessionStatus(id, status) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   if (!idSchema.safeParse(id).success) return { ok: false, error: "Identificador inválido." };
   const auth = await requireUser();
   if (!auth.ok) return auth;
@@ -273,10 +292,12 @@ export async function setSessionStatus(id: string, status: "agendada" | "conclui
 }
 
 export async function deleteSession(id: string): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.deleteSession(id) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   return deleteOwned("study_sessions", id, "Sessão excluída.");
 }
 
 export async function saveTimerSession(input: unknown): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.saveTimer(input) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   const parsed = timerSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   const auth = await requireUser();
@@ -298,6 +319,7 @@ export async function saveTimerSession(input: unknown): Promise<ActionResult> {
 }
 
 export async function updateProfile(input: unknown): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.updateProfile(input) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   const parsed = profileSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   const auth = await requireUser();
@@ -309,6 +331,7 @@ export async function updateProfile(input: unknown): Promise<ActionResult> {
 }
 
 export async function uploadAvatar(formData: FormData): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.uploadAvatar(formData) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   const auth = await requireUser();
   if (!auth.ok) return auth;
   const file = formData.get("file");
@@ -333,6 +356,7 @@ export async function uploadAvatar(formData: FormData): Promise<ActionResult> {
 }
 
 export async function removeAvatar(): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.removeAvatar() ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   const auth = await requireUser();
   if (!auth.ok) return auth;
   await auth.supabase.storage.from("avatars").remove([
@@ -347,6 +371,7 @@ export async function removeAvatar(): Promise<ActionResult> {
 }
 
 export async function updatePreferences(input: unknown): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.updatePreferences(input) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   const parsed = preferencesSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   const auth = await requireUser();
@@ -358,6 +383,7 @@ export async function updatePreferences(input: unknown): Promise<ActionResult> {
 }
 
 export async function saveNotificationContact(input: unknown): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.saveNotificationContact(input) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   const parsed = notificationContactSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   const auth = await requireUser();
@@ -374,6 +400,7 @@ export async function saveNotificationContact(input: unknown): Promise<ActionRes
 }
 
 export async function updateNotificationPreferences(input: unknown): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.updateNotificationPreferences(input) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   const parsed = notificationPreferencesSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   const auth = await requireUser();
@@ -385,6 +412,7 @@ export async function updateNotificationPreferences(input: unknown): Promise<Act
 }
 
 export async function markNotificationRead(id: string): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.markRead(id) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   if (!idSchema.safeParse(id).success) return { ok: false, error: "Identificador inválido." };
   const auth = await requireUser();
   if (!auth.ok) return auth;
@@ -395,6 +423,7 @@ export async function markNotificationRead(id: string): Promise<ActionResult> {
 }
 
 export async function markAllNotificationsRead(): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.markAllRead() ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   const auth = await requireUser();
   if (!auth.ok) return auth;
   const { error } = await auth.supabase
@@ -408,6 +437,7 @@ export async function markAllNotificationsRead(): Promise<ActionResult> {
 }
 
 export async function deleteOwnAccount(input: unknown): Promise<ActionResult> {
+  if (!createBrowserSupabase()) return browserWorkspace()?.deleteAccount(input) ?? { ok: false, error: SUPABASE_MISSING_MESSAGE };
   const parsed = deleteAccountSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   const auth = await requireUser();

@@ -11,37 +11,31 @@ import Link from "next/link";
 import { Alert, Button, EmptyState, PageHeader } from "@/components/ui";
 import { formatDateTimeBr } from "@/lib/dates";
 import { NOTIFICATION_LABEL } from "@/lib/labels";
+import { noticesFromBook } from "@/lib/local-workspace";
 import { useLocalAccount } from "@/lib/use-local-account";
+import { useLocalBook } from "@/lib/use-local-book";
 import { notificationPreferencesSchema } from "@/lib/validations";
 import { markAllNotificationsRead, markNotificationRead, updateNotificationPreferences } from "@/server/actions";
 import type { NotificationPreferencesRow, NotificationRow } from "@/types/domain";
 
 export function NotificationsView({
-  notifications,
-  preferences,
+  notifications: serverNotifications,
+  preferences: serverPreferences,
   dbMessage,
 }: {
   notifications: NotificationRow[];
   preferences: NotificationPreferencesRow | null;
   dbMessage: string | null;
 }) {
+  const stored = useLocalBook();
+  const notifications = stored ? noticesFromBook(stored) : serverNotifications;
+  const preferences = stored ? stored.notificationPreferences : serverPreferences;
   const router = useRouter();
   const account = useLocalAccount();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [filter, setFilter] = useState<"todas" | "nao_lidas">("todas");
   const visible = notifications.filter((item) => filter === "todas" || !item.read_at);
-  const form = useForm<z.infer<typeof notificationPreferencesSchema>>({
-    resolver: zodResolver(notificationPreferencesSchema),
-    defaultValues: {
-      deadlines_enabled: preferences?.deadlines_enabled ?? true,
-      overdue_enabled: preferences?.overdue_enabled ?? true,
-      exams_enabled: preferences?.exams_enabled ?? true,
-      assignments_enabled: preferences?.assignments_enabled ?? true,
-      sessions_enabled: preferences?.sessions_enabled ?? true,
-      email_opt_in: preferences?.email_opt_in ?? false,
-    },
-  });
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -81,22 +75,53 @@ export function NotificationsView({
           ))}
         </ul>
       )}
-      <form className="oe-card oe-pad space-y-3" onSubmit={form.handleSubmit(async (values) => {
-        const result = await updateNotificationPreferences(values);
-        if (!result.ok) setError(result.error);
-        else { setMessage(result.message); router.refresh(); }
-      })}>
-        <h2 className="font-semibold">Preferências</h2>
-        <p className="text-sm text-muted">Escolha quais avisos aparecem nesta página.</p>
-        <Preference name="deadlines_enabled" label="Prazos próximos" form={form} />
-        <Preference name="overdue_enabled" label="Tarefas atrasadas" form={form} />
-        <Preference name="exams_enabled" label="Provas futuras" form={form} />
-        <Preference name="assignments_enabled" label="Trabalhos pendentes" form={form} />
-        <Preference name="sessions_enabled" label="Sessões agendadas" form={form} />
-        <Preference name="email_opt_in" label="Avisos por e-mail" form={form} />
-        <Button type="submit" pending={form.formState.isSubmitting}>Salvar preferências</Button>
-      </form>
+      <NoticePrefs
+        key={preferences?.updated_at ?? "padrao"}
+        preferences={preferences}
+        onSaved={(text) => { setMessage(text); setError(""); router.refresh(); }}
+        onError={setError}
+      />
     </div>
+  );
+}
+
+function NoticePrefs({
+  preferences,
+  onSaved,
+  onError,
+}: {
+  preferences: NotificationPreferencesRow | null;
+  onSaved: (message: string) => void;
+  onError: (message: string) => void;
+}) {
+  const form = useForm<z.infer<typeof notificationPreferencesSchema>>({
+    resolver: zodResolver(notificationPreferencesSchema),
+    defaultValues: {
+      deadlines_enabled: preferences?.deadlines_enabled ?? true,
+      overdue_enabled: preferences?.overdue_enabled ?? true,
+      exams_enabled: preferences?.exams_enabled ?? true,
+      assignments_enabled: preferences?.assignments_enabled ?? true,
+      sessions_enabled: preferences?.sessions_enabled ?? true,
+      email_opt_in: preferences?.email_opt_in ?? false,
+    },
+  });
+
+  return (
+    <form className="oe-card oe-pad space-y-3" onSubmit={form.handleSubmit(async (values) => {
+      const result = await updateNotificationPreferences(values);
+      if (!result.ok) onError(result.error);
+      else onSaved(result.message);
+    })}>
+      <h2 className="font-semibold">Preferências</h2>
+      <p className="text-sm text-muted">Escolha quais avisos aparecem nesta página.</p>
+      <Preference name="deadlines_enabled" label="Prazos próximos" form={form} />
+      <Preference name="overdue_enabled" label="Tarefas atrasadas" form={form} />
+      <Preference name="exams_enabled" label="Provas futuras" form={form} />
+      <Preference name="assignments_enabled" label="Trabalhos pendentes" form={form} />
+      <Preference name="sessions_enabled" label="Sessões agendadas" form={form} />
+      <Preference name="email_opt_in" label="Avisos por e-mail" form={form} />
+      <Button type="submit" pending={form.formState.isSubmitting}>Salvar preferências</Button>
+    </form>
   );
 }
 

@@ -25,8 +25,8 @@ export function PublicHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-20 border-b border-border bg-card">
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-3 sm:gap-3 sm:px-4">
+    <header className="oe-public-bar sticky top-0 z-20 border-b border-border bg-card">
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 pl-3 pr-28 sm:gap-3 sm:pl-4 sm:pr-36">
         <Link href="/" className="mr-auto flex min-w-0" onClick={() => setOpen(false)}>
           <Logo size={32} />
         </Link>

@@ -21,6 +21,7 @@ export type AccountBook = {
   login(input: { name: string; secret: string }): Promise<{ ok: true; account: LocalAccount } | { ok: false; error: string }>;
   current(): LocalAccount | null;
   saveContact(contact: string): { ok: true } | { ok: false; error: string };
+  changeSecret(secret: string): Promise<{ ok: true } | { ok: false; error: string }>;
   logout(): void;
   removeCurrent(): void;
 };
@@ -111,6 +112,17 @@ export function createAccountBook(store: KeyValueStore): AccountBook {
       const current = accounts[index];
       if (!current) return { ok: false, error: "Entre na sua conta para guardar este contato." };
       accounts[index] = { ...current, notificationContact: trimmed };
+      writeAccounts(store, accounts);
+      return { ok: true };
+    },
+    async changeSecret(secret) {
+      const key = store.getItem(SESSION_KEY);
+      if (!key) return { ok: false, error: "Entre na sua conta para trocar a sequência secreta." };
+      const accounts = readAccounts(store);
+      const index = accounts.findIndex((account) => account.key === key);
+      const current = index >= 0 ? accounts[index] : undefined;
+      if (!current) return { ok: false, error: "Entre na sua conta para trocar a sequência secreta." };
+      accounts[index] = { ...current, secretHash: await hashSecret(key, secret) };
       writeAccounts(store, accounts);
       return { ok: true };
     },

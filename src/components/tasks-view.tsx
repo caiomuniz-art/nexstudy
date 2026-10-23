@@ -18,6 +18,7 @@ import { isoToSaoPauloLocal } from "@/lib/dates";
 import { subjectName } from "@/lib/text";
 import { EMPTY_TASK_QUERY, filterTasks, taskCounts, type TaskQuery } from "@/lib/tasks/query";
 import { taskFormSchema } from "@/lib/validations";
+import { useLocalBook } from "@/lib/use-local-book";
 import { createTask, deleteTask, setTaskStatus, updatePreferences, updateTask } from "@/server/actions";
 import { CATEGORIES, DUE_FILTERS, PRIORITIES, TASK_SORTS, TASK_STATUSES, type Density, type TaskRow, type TaskView, type Theme, type SubjectRow } from "@/types/domain";
 
@@ -31,9 +32,8 @@ const SORT_LABEL = {
 };
 
 export function TasksView({
-  tasks,
-  subjects,
-  configured,
+  tasks: serverTasks,
+  subjects: serverSubjects,
   theme,
   density,
   initialView,
@@ -57,6 +57,9 @@ export function TasksView({
   truncated: boolean;
   dbMessage: string | null;
 }) {
+  const stored = useLocalBook();
+  const tasks = stored ? stored.tasks : serverTasks;
+  const subjects = stored ? stored.subjects : serverSubjects;
   const router = useRouter();
   const now = useMemo(() => new Date(nowIso), [nowIso]);
   const [urlEditId, setUrlEditId] = useState(editId);
@@ -65,6 +68,12 @@ export function TasksView({
   const [query, setQuery] = useState<TaskQuery>(EMPTY_TASK_QUERY);
   const [page, setPage] = useState(1);
   const [view, setView] = useState<TaskView>(initialView);
+  const [viewSource, setViewSource] = useState(initialView);
+  const preferredView = stored?.preferences?.tasks_view;
+  if (preferredView && preferredView !== viewSource) {
+    setViewSource(preferredView);
+    setView(preferredView);
+  }
   const [dialog, setDialog] = useState<TaskRow | "new" | null>(editingFromUrl ?? (nova ? "new" : null));
   useApplyPageQuery((pageQuery) => {
     if (pageQuery.presetDate) setDatePreset(pageQuery.presetDate);
@@ -86,7 +95,6 @@ export function TasksView({
   async function changeView(next: TaskView) {
     setView(next);
     localStorage.setItem("oe-tasks-view", next);
-    if (!configured) return;
     const result = await updatePreferences({ theme, tasks_view: next, density });
     if (!result.ok) setError(result.error);
     else router.refresh();

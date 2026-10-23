@@ -15,7 +15,6 @@ import { Alert, Button, Field, TextInput } from "@/components/ui";
 import { getSiteUrl } from "@/lib/env";
 import { mapAuthError } from "@/lib/errors";
 import { browserAccounts } from "@/lib/local-account";
-import { SUPABASE_MISSING_MESSAGE } from "@/lib/messages";
 import { safeNextPath } from "@/lib/paths";
 import { createBrowserSupabase } from "@/lib/supabase/browser";
 import { loginSchema, recoverySchema, signupSchema } from "@/lib/validations";
@@ -153,7 +152,7 @@ export function RecoveryForm() {
     setInfo("");
     const supabase = createBrowserSupabase();
     if (!supabase) {
-      setError(SUPABASE_MISSING_MESSAGE);
+      setInfo("A conta fica neste navegador. Entre com o nome e a sequência secreta escolhidos no cadastro. Não enviamos e-mail.");
       return;
     }
     const next = encodeURIComponent("/configuracoes?recuperacao=1");

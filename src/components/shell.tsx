@@ -27,7 +27,9 @@ import { useEffect, useState } from "react";
 import { Logo } from "@/components/logo";
 import { StudyArt } from "@/components/study-art";
 import { browserAccounts } from "@/lib/local-account";
+import { noticesFromBook } from "@/lib/local-workspace";
 import { useLocalAccount } from "@/lib/use-local-account";
+import { useLocalBook } from "@/lib/use-local-book";
 import { logout, markNotificationRead, updatePreferences } from "@/server/actions";
 import type { ShellInfo } from "@/server/data";
 import { PRIVATE_ROUTES, type Theme } from "@/types/domain";
@@ -65,8 +67,13 @@ export function AppShell({ shell, children }: { shell: ShellInfo; children: Reac
   const [menuPath, setMenuPath] = useState(pathname);
   const [notice, setNotice] = useState<string | null>(null);
   const localAccount = useLocalAccount();
+  const stored = useLocalBook();
+  const savedTheme = stored?.preferences?.theme;
 
-  if (themeSource !== shell.theme) {
+  if (savedTheme && themeSource !== savedTheme) {
+    setThemeSource(savedTheme);
+    setTheme(savedTheme);
+  } else if (!savedTheme && themeSource !== shell.theme) {
     setThemeSource(shell.theme);
     setTheme(shell.theme);
   }
@@ -80,8 +87,8 @@ export function AppShell({ shell, children }: { shell: ShellInfo; children: Reac
 
   useEffect(() => {
     applyTheme(theme);
-    localStorage.setItem("oe-theme", theme);
-  }, [theme]);
+    if (stored?.preferences?.theme === theme) localStorage.setItem("oe-theme", theme);
+  }, [theme, stored]);
 
   async function signOut(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -96,22 +103,28 @@ export function AppShell({ shell, children }: { shell: ShellInfo; children: Reac
     setTheme(next);
     applyTheme(next);
     localStorage.setItem("oe-theme", next);
-    if (!shell.configured) {
-      setNotice("Tema atualizado neste navegador.");
-      return;
-    }
-    const result = await updatePreferences({ theme: next, tasks_view: shell.tasksView, density: shell.density });
+    const result = await updatePreferences({
+      theme: next,
+      tasks_view: stored?.preferences?.tasks_view ?? shell.tasksView,
+      density: stored?.preferences?.density ?? shell.density,
+    });
     setNotice(result.ok ? "Tema atualizado." : result.error);
     if (result.ok) router.refresh();
   }
 
   const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
   const signedIn = shell.configured || Boolean(localAccount);
-  const displayName = shell.fullName || localAccount?.name || (shell.configured ? "Estudante" : "Visitante");
+  const displayName = stored?.profile?.full_name || shell.fullName || localAccount?.name || (shell.configured ? "Estudante" : "Visitante");
+  const density = stored?.preferences?.density ?? shell.density;
+  const localNotices = stored ? noticesFromBook(stored).filter((item) => !item.read_at) : null;
+  const unreadCount = localNotices ? localNotices.length : shell.unreadCount;
+  const recent = localNotices
+    ? localNotices.slice(0, 5).map((item) => ({ id: item.id, title: item.title, href: item.href, read: Boolean(item.read_at) }))
+    : shell.recent;
   const accountLabel = localAccount?.notificationContact || localAccount?.name || shell.email || shell.fullName || "Sem sessão";
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[260px_1fr]" data-density={shell.density}>
+    <div className="min-h-screen lg:grid lg:grid-cols-[260px_1fr]" data-density={density}>
       <aside className={cn("fixed inset-y-0 left-0 z-40 w-[min(16.25rem,85vw)] max-w-[85vw] bg-sidebar text-white transition-transform lg:static lg:w-[260px] lg:max-w-none", open ? "translate-x-0" : "-translate-x-full lg:translate-x-0")}>
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between px-4 py-4">
@@ -162,7 +175,7 @@ export function AppShell({ shell, children }: { shell: ShellInfo; children: Reac
       </aside>
       {open ? <button type="button" className="fixed inset-0 z-30 bg-sidebar/40 lg:hidden" aria-label="Fechar menu" onClick={() => setOpen(false)} /> : null}
       <div className="min-w-0">
-        <header className="sticky top-0 z-20 flex min-w-0 items-center gap-2 border-b border-border bg-card/90 px-3 py-2 backdrop-blur sm:px-4">
+        <header className="sticky top-0 z-20 flex min-w-0 items-center gap-2 border-b border-border bg-card/90 py-2 pl-3 pr-28 backdrop-blur sm:pl-4 sm:pr-36">
           <button type="button" className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg hover:bg-accent-soft lg:hidden" aria-label="Abrir menu" onClick={() => setOpen(true)}>
             <Menu className="h-5 w-5" />
           </button>
@@ -185,15 +198,15 @@ export function AppShell({ shell, children }: { shell: ShellInfo; children: Reac
             <div className="relative">
               <button type="button" className="relative inline-flex h-11 w-11 items-center justify-center rounded-xl hover:bg-accent-soft" aria-label="Notificações" aria-expanded={notices} onClick={() => { setNotices((value) => !value); setQuick(false); setAccount(false); }}>
                 <Bell className="h-5 w-5" />
-                {shell.configured && shell.unreadCount > 0 ? (
-                  <span className="absolute right-1 top-1 inline-flex min-w-4 justify-center rounded-full bg-cyan px-1 text-[10px] font-semibold text-cyan-ink">{shell.unreadCount}</span>
+                {unreadCount > 0 ? (
+                  <span className="absolute right-1 top-1 inline-flex min-w-4 justify-center rounded-full bg-cyan px-1 text-[10px] font-semibold text-cyan-ink">{unreadCount}</span>
                 ) : null}
               </button>
               {notices ? (
                 <div className="oe-card absolute right-0 z-30 mt-2 w-[min(20rem,calc(100vw-1.5rem))] p-3 text-sm">
-                  {!signedIn ? <p>Entre na sua conta para ver os avisos.</p> : shell.recent.length === 0 ? <p>Nenhum aviso não lido.</p> : (
+                  {recent.length === 0 ? <p>{signedIn || stored ? "Nenhum aviso não lido." : "Entre na sua conta para ver os avisos."}</p> : (
                     <ul className="space-y-2">
-                      {shell.recent.map((item) => (
+                      {recent.map((item) => (
                         <li key={item.id}>
                           <button
                             type="button"

@@ -52,7 +52,7 @@ export default function HomePage() {
               Reúna tarefas, provas, grade, estudos e prazos. A interface é direta, e cada conta enxerga somente os próprios registros.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/cadastro" className="oe-btn">Começar agora</Link>
+              <Link href="/visitante" className="oe-btn">Continuar como visitante</Link>
               <Link href="/login" className="inline-flex h-11 items-center rounded-md border border-border bg-card px-4 text-sm font-semibold tracking-tight shadow-[inset_0_-2px_0_transparent] hover:shadow-[inset_0_-2px_0_var(--mark)]">Entrar</Link>
             </div>
           </div>

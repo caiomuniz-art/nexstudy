@@ -6,6 +6,7 @@ import { ReportCharts } from "@/components/charts";
 import { Alert, EmptyState, Field, PageHeader, SelectInput } from "@/components/ui";
 import { formatCivilBr } from "@/lib/dates";
 import { buildReport } from "@/lib/reports/build";
+import { useLocalBook } from "@/lib/use-local-book";
 import { PERIODS, type PeriodKey, type StudySessionRow, type SubjectRow, type TaskRow } from "@/types/domain";
 
 const PERIOD_LABEL: Record<PeriodKey, string> = {
@@ -17,9 +18,9 @@ const PERIOD_LABEL: Record<PeriodKey, string> = {
 };
 
 export function ReportsView({
-  tasks,
-  sessions,
-  subjects,
+  tasks: serverTasks,
+  sessions: serverSessions,
+  subjects: serverSubjects,
   today,
   nowIso,
   dbMessage,
@@ -31,6 +32,10 @@ export function ReportsView({
   nowIso: string;
   dbMessage: string | null;
 }) {
+  const stored = useLocalBook();
+  const tasks = stored ? stored.tasks : serverTasks;
+  const sessions = stored ? stored.sessions : serverSessions;
+  const subjects = stored ? stored.subjects : serverSubjects;
   const [period, setPeriod] = useState<PeriodKey>("esta_semana");
   const report = buildReport({ tasks, sessions, subjects, period, today, now: new Date(nowIso) });
   const hasSource = tasks.length > 0 || sessions.length > 0;
