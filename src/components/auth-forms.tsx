@@ -70,12 +70,12 @@ export function LoginForm({ nextPath, initialError }: { nextPath?: string; initi
         </button>
         <Button type="submit" className="w-full" pending={form.formState.isSubmitting}>Entrar</Button>
       </form>
+      <Link href="/visitante" className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-xl border-2 border-mark bg-accent-soft px-4 text-sm font-extrabold tracking-tight text-accent">
+        Continuar como visitante
+      </Link>
       <p className="mt-4 text-sm text-muted">
         Não tem uma conta? <Link href="/cadastro" className="text-accent">Cadastre-se.</Link>
       </p>
-      <Link href="/visitante" className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-xl border border-border bg-card px-4 text-sm font-medium">
-        Continuar como visitante
-      </Link>
     </AuthCard>
   );
 }
