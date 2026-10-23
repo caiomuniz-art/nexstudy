@@ -21,6 +21,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" suppressHydrationWarning>
       <body>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <div className="oe-backdrop" aria-hidden="true">
+          <span className="oe-shape oe-shape-diamond" />
+          <span className="oe-shape oe-shape-ring" />
+          <span className="oe-shape oe-shape-block" />
+        </div>
         <a className="skip-link" href="#conteudo">Ir para o conteúdo</a>
         {children}
       </body>

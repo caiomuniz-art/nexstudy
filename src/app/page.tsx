@@ -13,6 +13,7 @@ import Link from "next/link";
 
 import { Logo } from "@/components/logo";
 import { PublicFooter, PublicHeader } from "@/components/public-frame";
+import { StudyArt, type StudyScene } from "@/components/study-art";
 
 export const metadata: Metadata = {
   title: "NexStudy",
@@ -79,6 +80,24 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+        </section>
+
+        <section className="mx-auto grid max-w-6xl gap-4 px-4 pb-8 sm:grid-cols-3" aria-label="Composições do estudo">
+          {(
+            [
+              ["estudo", "Estudo", "Caderno, relógio e lista de tarefas."],
+              ["calendario", "Calendário", "A grade do mês com um dia marcado."],
+              ["horario", "Horário", "Os blocos da semana letiva."],
+            ] as const satisfies ReadonlyArray<readonly [StudyScene, string, string]>
+          ).map(([scene, title, text]) => (
+            <figure key={scene} className="oe-card overflow-hidden p-3">
+              <StudyArt scene={scene} />
+              <figcaption className="px-2 pb-1 pt-3">
+                <h2 className="border-l-4 border-mark pl-3 text-base font-extrabold tracking-tight">{title}</h2>
+                <p className="mt-2 text-sm leading-6 text-muted">{text}</p>
+              </figcaption>
+            </figure>
+          ))}
         </section>
 
         <section className="mx-auto grid max-w-6xl gap-4 px-4 pb-4 sm:grid-cols-3">

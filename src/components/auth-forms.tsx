@@ -10,6 +10,7 @@ import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
 import { Logo } from "@/components/logo";
+import { StudyArt, type StudyScene } from "@/components/study-art";
 import { Alert, Button, Field, TextInput } from "@/components/ui";
 import { getSiteUrl } from "@/lib/env";
 import { mapAuthError } from "@/lib/errors";
@@ -55,7 +56,7 @@ export function LoginForm({ nextPath, initialError }: { nextPath?: string; initi
   }
 
   return (
-    <AuthCard title="Entrar" subtitle="Use os dados da sua conta.">
+    <AuthCard scene="calendario" title="Entrar" subtitle="Use os dados da sua conta.">
       <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)} noValidate>
         {error ? <Alert tone="error">{error}</Alert> : null}
         <Field id="identificacao" error={form.formState.errors.username?.message}>
@@ -111,7 +112,7 @@ export function SignupForm() {
   }
 
   return (
-    <AuthCard title="Criar conta" subtitle="A conta fica salva para você entrar depois. Série, turma e escola ficam no perfil.">
+    <AuthCard scene="estudo" title="Criar conta" subtitle="A conta fica salva para você entrar depois. Série, turma e escola ficam no perfil.">
       <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)} noValidate>
         {error ? <Alert tone="error">{error}</Alert> : null}
         {info ? <Alert tone="success">{info}</Alert> : null}
@@ -167,7 +168,7 @@ export function RecoveryForm() {
   }
 
   return (
-    <AuthCard title="Recuperar senha" subtitle="Enviaremos um link se a conta existir.">
+    <AuthCard scene="horario" title="Recuperar senha" subtitle="Enviaremos um link se a conta existir.">
       <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)} noValidate>
         {error ? <Alert tone="error">{error}</Alert> : null}
         {info ? <Alert tone="success">{info}</Alert> : null}
@@ -181,9 +182,12 @@ export function RecoveryForm() {
   );
 }
 
-function AuthCard({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
+function AuthCard({ scene, title, subtitle, children }: { scene: StudyScene; title: string; subtitle: string; children: React.ReactNode }) {
   return (
     <main id="conteudo" className="mx-auto flex min-h-[calc(100vh-73px)] w-full max-w-md flex-col justify-center px-4 py-10">
+      <div className="oe-card mx-auto mb-6 w-full max-w-64 overflow-hidden">
+        <StudyArt scene={scene} />
+      </div>
       <div className="oe-card oe-pad rise">
         <Logo />
         <h1 className="oe-section mt-6">{title}</h1>

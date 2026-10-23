@@ -25,6 +25,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Logo } from "@/components/logo";
+import { StudyArt } from "@/components/study-art";
 import { browserAccounts } from "@/lib/local-account";
 import { useLocalAccount } from "@/lib/use-local-account";
 import { logout, markNotificationRead, updatePreferences } from "@/server/actions";
@@ -235,6 +236,17 @@ export function AppShell({ shell, children }: { shell: ShellInfo; children: Reac
             </div>
           </div>
         </header>
+        <div className="pointer-events-none grid grid-cols-3 gap-2 px-4 pt-4 sm:gap-3 sm:px-6" aria-hidden="true">
+          <div className="oe-card overflow-hidden p-1.5 sm:p-2">
+            <StudyArt scene="estudo" decorative />
+          </div>
+          <div className="oe-card overflow-hidden p-1.5 sm:p-2">
+            <StudyArt scene="calendario" decorative />
+          </div>
+          <div className="oe-card overflow-hidden p-1.5 sm:p-2">
+            <StudyArt scene="horario" decorative />
+          </div>
+        </div>
         <main id="conteudo" className="min-w-0 px-4 py-6 sm:px-6">
           {notice ? <p role="status" className="mb-4 text-sm text-muted">{notice}</p> : null}
           {shell.dbMessage ? <p role="alert" className="mb-4 rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm">{shell.dbMessage}</p> : null}
